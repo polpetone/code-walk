@@ -1,21 +1,13 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"log"
 	"bufio"
-	"io/ioutil"
+	"fmt"
+	"log"
+	"os"
 	"path/filepath"
 )
 
-func getFiles(root string) []os.FileInfo {
-	files, err := ioutil.ReadDir(root)
-    if err != nil {
-        log.Fatal(err)
-    }
-	return files
-}
 
 func visit(files *[]string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
