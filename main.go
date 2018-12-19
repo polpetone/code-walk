@@ -3,11 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/fatih/color"
+	"github.com/nsf/termbox-go"
 	"log"
 	"os"
 	"path/filepath"
 	"time"
-	"github.com/fatih/color"
 )
 
 
@@ -50,22 +51,17 @@ func contains(slice []string, item string) bool {
 	return ok
 }
 
-func printContent(contents [][]string, delayTimeInMS time.Duration){
-	color.Set(color.FgHiGreen)
-	defer color.Unset()
-	for _,c := range contents {
-		for _, l := range c {
-			time.Sleep(delayTimeInMS * time.Millisecond)
-			fmt.Println(l)
-		}
-	}
+func printContent(contents [][]string, delay time.Duration){
+
+
 }
 
-func codeWalk(){
+func codeWalk(delayTimeInMsChannel chan time.Duration){
 
 	fileTypes := []string{".tf", ".sh", ".java"}
 	var files []string
 	var fileContents [][]string
+	var currentDelay time.Duration = 200
 
 	root := "/home/icke/workspace/qudo"
 	err := filepath.Walk(root, visit(&files))
@@ -81,9 +77,62 @@ func codeWalk(){
 			}
 		}
 	}
-	printContent(fileContents, 200)
+
+	color.Set(color.FgHiGreen)
+	defer color.Unset()
+
+	for _,c := range fileContents {
+		for _, l := range c {
+			select {
+			case delayTimeInMs := <- delayTimeInMsChannel:
+				currentDelay = delayTimeInMs
+				fmt.Println("DEBUG ---- ")
+				fmt.Println(delayTimeInMs)
+				fmt.Println("DEBUG ---- ")
+				time.Sleep(currentDelay * time.Millisecond)
+				fmt.Println(l)
+			default:
+				time.Sleep(currentDelay * time.Millisecond)
+				fmt.Println(l)
+			}
+		}
+	}
+}
+
+func termboxPoc(message chan time.Duration){
+	err := termbox.Init()
+	if err != nil {
+		panic(err)
+	}
+	termbox.SetInputMode(termbox.InputEsc)
+
+	var delay time.Duration = 200
+
+mainloop:
+	for {
+		switch ev := termbox.PollEvent(); ev.Type {
+		case termbox.EventKey:
+			if ev.Ch == '+' {
+				delay = delay - 50
+				if delay > 0 {
+					message <- delay
+				}
+			}
+			if ev.Ch == '-' {
+				delay = delay + 50
+				message <- delay
+			}
+		case termbox.EventError:
+			panic(ev.Err)
+		case termbox.EventInterrupt:
+			break mainloop
+		}
+	}
+
 }
 
 func main(){
-	codeWalk()
+	delay := make(chan time.Duration)
+	go codeWalk(delay)
+	termboxPoc(delay)
 }
