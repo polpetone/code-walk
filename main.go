@@ -52,16 +52,12 @@ func contains(slice []string, item string) bool {
 	return ok
 }
 
-func codeWalk(delayTimeInMsChannel chan time.Duration, colorChannel chan bool){
-
-	fileTypes := []string{".tf", ".sh", ".java", ".go"}
+func codeWalk(rootFilePath string, fileTypes []string, delayTimeInMsChannel chan time.Duration, colorChannel chan bool){
 	var files []string
 	var fileContents [][]string
 	var currentDelay time.Duration = 200
 
-	//root := "/home/icke/workspace/qudo"
-	root := "/home/icke/workspace/playground/kubernetes"
-	err := filepath.Walk(root, visit(&files))
+	err := filepath.Walk(rootFilePath, visit(&files))
 	if err != nil {
 		panic(err)
 	}
@@ -104,8 +100,6 @@ func codeWalk(delayTimeInMsChannel chan time.Duration, colorChannel chan bool){
 				randomColorIndex:= rand.Intn(6)
 				if colorSwitch {
 					color.Set(colors[randomColorIndex])
-				} else {
-					color.Set(colors[randomColorIndex])
 				}
 			default:
 			}
@@ -142,9 +136,6 @@ mainloop:
 			if ev.Ch == 'c' {
 				colorChannel <- true
 			}
-			if ev.Ch == 'd' {
-				colorChannel <- false
-			}
 		case termbox.EventError:
 			panic(ev.Err)
 		case termbox.EventInterrupt:
@@ -155,9 +146,11 @@ mainloop:
 }
 
 func main(){
+	root := "/home/icke/workspace/playground/kubernetes"
+	fileTypes := []string{".tf", ".sh", ".java", ".go"}
 	delay := make(chan time.Duration)
 	color := make(chan bool)
-	go codeWalk(delay, color)
+	go codeWalk(root, fileTypes, delay, color)
 	keyHandler(delay, color)
 }
 
