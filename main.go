@@ -59,8 +59,6 @@ func main(){
     for _, file := range files {
     	var extension = filepath.Ext(file)
     	if contains(fileTypes, extension){
-			fmt.Println(file)
-			fmt.Println(extension)
     		readFile(file)
 		}
     }
