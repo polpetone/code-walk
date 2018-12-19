@@ -61,26 +61,29 @@ func printContent(contents [][]string, delayTimeInMS time.Duration){
 	}
 }
 
-func main(){
+func codeWalk(){
 
 	fileTypes := []string{".tf", ".sh", ".java"}
 	var files []string
 	var fileContents [][]string
 
-
-    root := "/home/icke/workspace/qudo"
+	root := "/home/icke/workspace/qudo"
 	err := filepath.Walk(root, visit(&files))
 	if err != nil {
 		panic(err)
 	}
-    for _, file := range files {
-    	var extension = filepath.Ext(file)
-    	if contains(fileTypes, extension){
-    		content, err := readFile(file)
-    		if err == nil {
-    			fileContents = append(fileContents, content)
+	for _, file := range files {
+		var extension = filepath.Ext(file)
+		if contains(fileTypes, extension){
+			content, err := readFile(file)
+			if err == nil {
+				fileContents = append(fileContents, content)
 			}
 		}
-    }
-    printContent(fileContents, 200)
+	}
+	printContent(fileContents, 200)
+}
+
+func main(){
+	codeWalk()
 }
