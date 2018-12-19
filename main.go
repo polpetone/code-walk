@@ -51,14 +51,9 @@ func contains(slice []string, item string) bool {
 	return ok
 }
 
-func printContent(contents [][]string, delay time.Duration){
-
-
-}
-
 func codeWalk(delayTimeInMsChannel chan time.Duration){
 
-	fileTypes := []string{".tf", ".sh", ".java"}
+	fileTypes := []string{".tf", ".sh", ".java", ".go"}
 	var files []string
 	var fileContents [][]string
 	var currentDelay time.Duration = 200
@@ -86,9 +81,6 @@ func codeWalk(delayTimeInMsChannel chan time.Duration){
 			select {
 			case delayTimeInMs := <- delayTimeInMsChannel:
 				currentDelay = delayTimeInMs
-				fmt.Println("DEBUG ---- ")
-				fmt.Println(delayTimeInMs)
-				fmt.Println("DEBUG ---- ")
 				time.Sleep(currentDelay * time.Millisecond)
 				fmt.Println(l)
 			default:
