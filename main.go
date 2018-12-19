@@ -6,6 +6,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/nsf/termbox-go"
 	"log"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"time"
@@ -51,14 +52,15 @@ func contains(slice []string, item string) bool {
 	return ok
 }
 
-func codeWalk(delayTimeInMsChannel chan time.Duration){
+func codeWalk(delayTimeInMsChannel chan time.Duration, colorChannel chan bool){
 
 	fileTypes := []string{".tf", ".sh", ".java", ".go"}
 	var files []string
 	var fileContents [][]string
 	var currentDelay time.Duration = 200
 
-	root := "/home/icke/workspace/qudo"
+	//root := "/home/icke/workspace/qudo"
+	root := "/home/icke/workspace/playground/kubernetes"
 	err := filepath.Walk(root, visit(&files))
 	if err != nil {
 		panic(err)
@@ -74,24 +76,47 @@ func codeWalk(delayTimeInMsChannel chan time.Duration){
 	}
 
 	color.Set(color.FgHiGreen)
+
+	colors := []color.Attribute {
+		color.FgHiGreen,
+		color.FgBlue,
+		color.FgCyan,
+		color.FgHiBlue,
+		color.FgHiMagenta,
+		color.FgHiWhite,
+	}
+
+	rand.Seed(time.Now().Unix())
+
 	defer color.Unset()
 
 	for _,c := range fileContents {
 		for _, l := range c {
+
 			select {
 			case delayTimeInMs := <- delayTimeInMsChannel:
 				currentDelay = delayTimeInMs
-				time.Sleep(currentDelay * time.Millisecond)
-				fmt.Println(l)
 			default:
-				time.Sleep(currentDelay * time.Millisecond)
-				fmt.Println(l)
 			}
+
+			select {
+			case colorSwitch := <- colorChannel:
+				randomColorIndex:= rand.Intn(6)
+				if colorSwitch {
+					color.Set(colors[randomColorIndex])
+				} else {
+					color.Set(colors[randomColorIndex])
+				}
+			default:
+			}
+
+			time.Sleep(currentDelay * time.Millisecond)
+			fmt.Println(l)
 		}
 	}
 }
 
-func termboxPoc(message chan time.Duration){
+func keyHandler(delayChannel chan time.Duration, colorChannel chan bool){
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
@@ -107,12 +132,18 @@ mainloop:
 			if ev.Ch == '+' {
 				delay = delay - 50
 				if delay > 0 {
-					message <- delay
+					delayChannel <- delay
 				}
 			}
 			if ev.Ch == '-' {
 				delay = delay + 50
-				message <- delay
+				delayChannel <- delay
+			}
+			if ev.Ch == 'c' {
+				colorChannel <- true
+			}
+			if ev.Ch == 'd' {
+				colorChannel <- false
 			}
 		case termbox.EventError:
 			panic(ev.Err)
@@ -125,6 +156,8 @@ mainloop:
 
 func main(){
 	delay := make(chan time.Duration)
-	go codeWalk(delay)
-	termboxPoc(delay)
+	color := make(chan bool)
+	go codeWalk(delay, color)
+	keyHandler(delay, color)
 }
+
