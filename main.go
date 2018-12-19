@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
+	"github.com/fatih/color"
 )
 
 
@@ -22,19 +24,21 @@ func visit(files *[]string) filepath.WalkFunc {
 	}
 }
 
-func readFile(fileName string){
+func readFile(fileName string) ([]string, error){
 	file, err := os.Open(fileName)
     if err != nil {
         log.Fatal(err)
     }
     defer file.Close()
     scanner := bufio.NewScanner(file)
+    var text []string
     for scanner.Scan() {
-        fmt.Println(scanner.Text())
+        text = append(text,scanner.Text())
     }
     if err := scanner.Err(); err != nil {
-        log.Fatal(err)
+    	return nil, err
     }
+    return text, nil
 }
 
 func contains(slice []string, item string) bool {
@@ -46,10 +50,23 @@ func contains(slice []string, item string) bool {
 	return ok
 }
 
+func printContent(contents [][]string, delayTimeInMS time.Duration){
+	color.Set(color.FgHiGreen)
+	defer color.Unset()
+	for _,c := range contents {
+		for _, l := range c {
+			time.Sleep(delayTimeInMS * time.Millisecond)
+			fmt.Println(l)
+		}
+	}
+}
+
 func main(){
 
 	fileTypes := []string{".tf", ".sh", ".java"}
 	var files []string
+	var fileContents [][]string
+
 
     root := "/home/icke/workspace/qudo"
 	err := filepath.Walk(root, visit(&files))
@@ -59,7 +76,11 @@ func main(){
     for _, file := range files {
     	var extension = filepath.Ext(file)
     	if contains(fileTypes, extension){
-    		readFile(file)
+    		content, err := readFile(file)
+    		if err == nil {
+    			fileContents = append(fileContents, content)
+			}
 		}
     }
+    printContent(fileContents, 200)
 }
