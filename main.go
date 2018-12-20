@@ -58,7 +58,7 @@ func contains(slice []string, item string) bool {
 func codeWalk(rootFilePath string, fileTypes []string, delayTimeInMsChannel chan time.Duration, colorChannel chan bool) {
 	var files []string
 	var fileContents [][]string
-	var currentDelay time.Duration = 200000
+	var currentDelay time.Duration = 2000000
 
 	err := filepath.Walk(rootFilePath, visit(&files))
 	if err != nil {
@@ -164,24 +164,14 @@ mainloop:
 
 }
 
-var fileTypes = []string{".tf", ".sh", ".java", ".go"}
-var dir string
 
-func initialize() {
-	initLogging(DEFAULT_LOG)
-	dir = *flag.String("dir", "/", "directory to walk")
+func main() {	initLogging(DEFAULT_LOG)
+	var fileTypes = []string{".tf", ".sh", ".java", ".go"}
+	dir := flag.String("dir", "/", "directory to walk")
 	flag.Parse()
-	Info.Println("Walking Directory: ", dir)
-}
-
-func run() {
+	Info.Println("Walking Directory: ", *dir)
 	delayChannel := make(chan time.Duration)
 	colorChannel := make(chan bool)
-	go codeWalk(dir, fileTypes, delayChannel, colorChannel)
+	go codeWalk(*dir, fileTypes, delayChannel, colorChannel)
 	keyHandler(delayChannel, colorChannel)
-}
-
-func main() {
-	initialize()
-	run()
 }
