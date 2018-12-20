@@ -164,14 +164,24 @@ mainloop:
 
 }
 
-func main() {
+var fileTypes = []string{".tf", ".sh", ".java", ".go"}
+var dir string
+
+func initialize() {
 	initLogging(DEFAULT_LOG)
-	dir := flag.String("dir", "/", "directory to walk")
+	dir = *flag.String("dir", "/", "directory to walk")
 	flag.Parse()
-	Info.Println("Walking Directory: ", *dir)
-	fileTypes := []string{".tf", ".sh", ".java", ".go"}
-	delay := make(chan time.Duration)
-	color := make(chan bool)
-	go codeWalk(*dir, fileTypes, delay, color)
-	keyHandler(delay, color)
+	Info.Println("Walking Directory: ", dir)
+}
+
+func run() {
+	delayChannel := make(chan time.Duration)
+	colorChannel := make(chan bool)
+	go codeWalk(dir, fileTypes, delayChannel, colorChannel)
+	keyHandler(delayChannel, colorChannel)
+}
+
+func main() {
+	initialize()
+	run()
 }
