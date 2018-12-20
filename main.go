@@ -88,15 +88,16 @@ func codeWalk(rootFilePath string, fileTypes []string, delayTimeInMsChannel chan
 
 	for _,c := range fileContents {
 		for _, l := range c {
+			for _, x := range l {
 
 			select {
-			case delayTimeInMs := <- delayTimeInMsChannel:
+			case delayTimeInMs := <-delayTimeInMsChannel:
 				currentDelay = delayTimeInMs
 			default:
 			}
 
 			select {
-			case colorSwitch := <- colorChannel:
+			case colorSwitch := <-colorChannel:
 				randomColorIndex:= rand.Intn(6)
 				if colorSwitch {
 					color.Set(colors[randomColorIndex])
@@ -105,7 +106,9 @@ func codeWalk(rootFilePath string, fileTypes []string, delayTimeInMsChannel chan
 			}
 
 			time.Sleep(currentDelay * time.Millisecond)
-			fmt.Println(l)
+			fmt.Print(string(x))
+			}
+			fmt.Println("")
 		}
 	}
 }
