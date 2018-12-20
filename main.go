@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/nsf/termbox-go"
@@ -13,7 +14,7 @@ import (
 )
 
 const DEFAULT_LOG = "/tmp/code_walk.log"
-const DELAY_STEP = 50
+const DELAY_STEP = 20000
 
 func visit(files *[]string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
@@ -57,7 +58,7 @@ func contains(slice []string, item string) bool {
 func codeWalk(rootFilePath string, fileTypes []string, delayTimeInMsChannel chan time.Duration, colorChannel chan bool) {
 	var files []string
 	var fileContents [][]string
-	var currentDelay time.Duration = 200
+	var currentDelay time.Duration = 200000
 
 	err := filepath.Walk(rootFilePath, visit(&files))
 	if err != nil {
@@ -107,7 +108,7 @@ func codeWalk(rootFilePath string, fileTypes []string, delayTimeInMsChannel chan
 				default:
 				}
 
-				time.Sleep(currentDelay * time.Millisecond)
+				time.Sleep(currentDelay * time.Nanosecond)
 				fmt.Print(string(x))
 			}
 			fmt.Println("")
@@ -123,6 +124,7 @@ func keyHandler(delayChannel chan time.Duration, colorChannel chan bool) {
 	termbox.SetInputMode(termbox.InputEsc)
 
 	var delay time.Duration = 200
+	var delayStep time.Duration = DELAY_STEP
 
 mainloop:
 	for {
@@ -133,16 +135,20 @@ mainloop:
 				break mainloop
 			}
 			if ev.Ch == '+' {
-				if delay > 0 + DELAY_STEP{
-					delay = delay - DELAY_STEP
+				if delay > 0 + delayStep {
+					delay = delay - delayStep
 				} else {
-					delay = 0
+					delayStep = delayStep / 2
+					if delay > 0 + delayStep {
+						delay = delay - delayStep
+					}
 				}
 				Info.Println("Delay:", delay)
 				delayChannel <- delay
 			}
 			if ev.Ch == '-' {
-				delay = delay + DELAY_STEP
+				delayStep = delayStep * 2
+				delay = delay + delayStep
 				Info.Println("Delay:", delay)
 				delayChannel <- delay
 			}
@@ -160,10 +166,12 @@ mainloop:
 
 func main() {
 	initLogging(DEFAULT_LOG)
-	root := "/home/icke/workspace/playground/kubernetes"
+	dir := flag.String("dir", "/", "directory to walk")
+	flag.Parse()
+	Info.Println("Walking Directory: ", *dir)
 	fileTypes := []string{".tf", ".sh", ".java", ".go"}
 	delay := make(chan time.Duration)
 	color := make(chan bool)
-	go codeWalk(root, fileTypes, delay, color)
+	go codeWalk(*dir, fileTypes, delay, color)
 	keyHandler(delay, color)
 }
