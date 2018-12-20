@@ -12,6 +12,9 @@ import (
 	"time"
 )
 
+const DEFAULT_LOG = "/tmp/code_walk.log"
+const DELAY_STEP = 50
+
 func visit(files *[]string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -130,13 +133,17 @@ mainloop:
 				break mainloop
 			}
 			if ev.Ch == '+' {
-				delay = delay - 50
-				if delay > 0 {
-					delayChannel <- delay
+				if delay > 0 + DELAY_STEP{
+					delay = delay - DELAY_STEP
+				} else {
+					delay = 0
 				}
+				Info.Println("Delay:", delay)
+				delayChannel <- delay
 			}
 			if ev.Ch == '-' {
-				delay = delay + 50
+				delay = delay + DELAY_STEP
+				Info.Println("Delay:", delay)
 				delayChannel <- delay
 			}
 			if ev.Ch == 'c' {
@@ -152,6 +159,7 @@ mainloop:
 }
 
 func main() {
+	initLogging(DEFAULT_LOG)
 	root := "/home/icke/workspace/playground/kubernetes"
 	fileTypes := []string{".tf", ".sh", ".java", ".go"}
 	delay := make(chan time.Duration)
