@@ -12,7 +12,6 @@ import (
 	"time"
 )
 
-
 func visit(files *[]string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -26,21 +25,21 @@ func visit(files *[]string) filepath.WalkFunc {
 	}
 }
 
-func readFile(fileName string) ([]string, error){
+func readFile(fileName string) ([]string, error) {
 	file, err := os.Open(fileName)
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer file.Close()
-    scanner := bufio.NewScanner(file)
-    var text []string
-    for scanner.Scan() {
-        text = append(text,scanner.Text())
-    }
-    if err := scanner.Err(); err != nil {
-    	return nil, err
-    }
-    return text, nil
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	var text []string
+	for scanner.Scan() {
+		text = append(text, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	return text, nil
 }
 
 func contains(slice []string, item string) bool {
@@ -52,7 +51,7 @@ func contains(slice []string, item string) bool {
 	return ok
 }
 
-func codeWalk(rootFilePath string, fileTypes []string, delayTimeInMsChannel chan time.Duration, colorChannel chan bool){
+func codeWalk(rootFilePath string, fileTypes []string, delayTimeInMsChannel chan time.Duration, colorChannel chan bool) {
 	var files []string
 	var fileContents [][]string
 	var currentDelay time.Duration = 200
@@ -63,7 +62,7 @@ func codeWalk(rootFilePath string, fileTypes []string, delayTimeInMsChannel chan
 	}
 	for _, file := range files {
 		var extension = filepath.Ext(file)
-		if contains(fileTypes, extension){
+		if contains(fileTypes, extension) {
 			content, err := readFile(file)
 			if err == nil {
 				fileContents = append(fileContents, content)
@@ -73,7 +72,7 @@ func codeWalk(rootFilePath string, fileTypes []string, delayTimeInMsChannel chan
 
 	color.Set(color.FgHiGreen)
 
-	colors := []color.Attribute {
+	colors := []color.Attribute{
 		color.FgHiGreen,
 		color.FgBlue,
 		color.FgCyan,
@@ -86,34 +85,34 @@ func codeWalk(rootFilePath string, fileTypes []string, delayTimeInMsChannel chan
 
 	defer color.Unset()
 
-	for _,c := range fileContents {
+	for _, c := range fileContents {
 		for _, l := range c {
 			for _, x := range l {
 
-			select {
-			case delayTimeInMs := <-delayTimeInMsChannel:
-				currentDelay = delayTimeInMs
-			default:
-			}
-
-			select {
-			case colorSwitch := <-colorChannel:
-				randomColorIndex:= rand.Intn(6)
-				if colorSwitch {
-					color.Set(colors[randomColorIndex])
+				select {
+				case delayTimeInMs := <-delayTimeInMsChannel:
+					currentDelay = delayTimeInMs
+				default:
 				}
-			default:
-			}
 
-			time.Sleep(currentDelay * time.Millisecond)
-			fmt.Print(string(x))
+				select {
+				case colorSwitch := <-colorChannel:
+					randomColorIndex := rand.Intn(6)
+					if colorSwitch {
+						color.Set(colors[randomColorIndex])
+					}
+				default:
+				}
+
+				time.Sleep(currentDelay * time.Millisecond)
+				fmt.Print(string(x))
 			}
 			fmt.Println("")
 		}
 	}
 }
 
-func keyHandler(delayChannel chan time.Duration, colorChannel chan bool){
+func keyHandler(delayChannel chan time.Duration, colorChannel chan bool) {
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
@@ -126,6 +125,10 @@ mainloop:
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
+			switch ev.Key {
+			case termbox.KeyEsc:
+				break mainloop
+			}
 			if ev.Ch == '+' {
 				delay = delay - 50
 				if delay > 0 {
@@ -148,7 +151,7 @@ mainloop:
 
 }
 
-func main(){
+func main() {
 	root := "/home/icke/workspace/playground/kubernetes"
 	fileTypes := []string{".tf", ".sh", ".java", ".go"}
 	delay := make(chan time.Duration)
@@ -156,4 +159,3 @@ func main(){
 	go codeWalk(root, fileTypes, delay, color)
 	keyHandler(delay, color)
 }
-
