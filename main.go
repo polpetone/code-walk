@@ -55,15 +55,16 @@ func contains(slice []string, item string) bool {
 }
 
 func codeWalk(files []string, fileTypes []string, delayTimeInMsChannel chan time.Duration, colorChannel chan bool) {
-	var fileContents [][]string
 	var currentDelay time.Duration = 2000000
+
+	fileMap := make(map[string][]string)
 
 	for _, file := range files {
 		var extension = filepath.Ext(file)
 		if contains(fileTypes, extension) {
 			content, err := readFile(file)
 			if err == nil {
-				fileContents = append(fileContents, content)
+				fileMap[file] = content
 			}
 		}
 	}
@@ -83,8 +84,9 @@ func codeWalk(files []string, fileTypes []string, delayTimeInMsChannel chan time
 
 	defer color.Unset()
 
-	for _, c := range fileContents {
-		for _, l := range c {
+	for fileName, content := range fileMap {
+		Info.Println("Current File:", fileName)
+		for _, l := range content {
 			for _, x := range l {
 
 				select {
