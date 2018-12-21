@@ -21,7 +21,6 @@ func visit(files *[]string) filepath.WalkFunc {
 		if err != nil {
 			log.Fatal(err)
 		}
-
 		if !info.IsDir() {
 			*files = append(*files, path)
 		}
@@ -58,7 +57,6 @@ func contains(slice []string, item string) bool {
 func codeWalk(files []string, fileTypes []string, delayTimeInMsChannel chan time.Duration, colorChannel chan bool) {
 	var fileContents [][]string
 	var currentDelay time.Duration = 2000000
-
 
 	for _, file := range files {
 		var extension = filepath.Ext(file)
@@ -174,6 +172,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	Info.Println("Loaded ", len(files), "files")
 	go codeWalk(files, fileTypes, delayChannel, colorChannel)
 	keyHandler(delayChannel, colorChannel)
 }
