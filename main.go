@@ -56,15 +56,11 @@ func contains(slice []string, item string) bool {
 	return ok
 }
 
-func codeWalk(rootFilePath string, fileTypes []string, delayTimeInMsChannel chan time.Duration, colorChannel chan bool) {
-	var files []string
+func codeWalk(files []string, fileTypes []string, delayTimeInMsChannel chan time.Duration, colorChannel chan bool) {
 	var fileContents [][]string
 	var currentDelay time.Duration = 2000000
 
-	err := filepath.Walk(rootFilePath, visit(&files))
-	if err != nil {
-		panic(err)
-	}
+
 	for _, file := range files {
 		var extension = filepath.Ext(file)
 		if contains(fileTypes, extension) {
@@ -117,13 +113,6 @@ func codeWalk(rootFilePath string, fileTypes []string, delayTimeInMsChannel chan
 	}
 }
 
-func tbprint(x, y int, fg, bg termbox.Attribute, msg string) {
-	for _,c := range msg {
-		termbox.SetCell(x, y, c, fg, bg)
-		x += runewidth.RuneWidth(c)
-	}
-
-}
 
 func keyHandler(delayChannel chan time.Duration, colorChannel chan bool) {
 	err := termbox.Init()
@@ -174,18 +163,6 @@ mainloop:
 
 }
 
-
-func draw(){
-	const edit_box_width = 30
-	const coldef = termbox.ColorDefault
-	w, h := termbox.Size()
-	midy := h / 2
-	midx := (w - edit_box_width) / 2
-	tbprint(midx+8, midy+6, coldef, coldef, "Foobar")
-	termbox.Flush()
-
-}
-
 func main() {
 	initLogging(DEFAULT_LOG)
 	delayChannel := make(chan time.Duration)
@@ -194,6 +171,27 @@ func main() {
 	dir := flag.String("dir", "/", "directory to walk")
 	flag.Parse()
 	Info.Println("Walking Directory: ", *dir)
-	go codeWalk(*dir, fileTypes, delayChannel, colorChannel)
+	var files []string
+	err := filepath.Walk(*dir, visit(&files))
+	if err != nil {
+		panic(err)
+	}
+	go codeWalk(files, fileTypes, delayChannel, colorChannel)
 	keyHandler(delayChannel, colorChannel)
+}
+
+func tbprint(x, y int, fg, bg termbox.Attribute, msg string) {
+	for _,c := range msg {
+		termbox.SetCell(x, y, c, fg, bg)
+		x += runewidth.RuneWidth(c)
+	}
+}
+func draw(){
+	const edit_box_width = 30
+	const coldef = termbox.ColorDefault
+	w, h := termbox.Size()
+	midy := h / 2
+	midx := (w - edit_box_width) / 2
+	tbprint(midx+8, midy+6, coldef, coldef, "Foobar")
+	termbox.Flush()
 }
