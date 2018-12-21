@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/mattn/go-runewidth"
 	"github.com/nsf/termbox-go"
 	"log"
 	"math/rand"
@@ -116,6 +117,14 @@ func codeWalk(rootFilePath string, fileTypes []string, delayTimeInMsChannel chan
 	}
 }
 
+func tbprint(x, y int, fg, bg termbox.Attribute, msg string) {
+	for _,c := range msg {
+		termbox.SetCell(x, y, c, fg, bg)
+		x += runewidth.RuneWidth(c)
+	}
+
+}
+
 func keyHandler(delayChannel chan time.Duration, colorChannel chan bool) {
 	err := termbox.Init()
 	if err != nil {
@@ -126,6 +135,7 @@ func keyHandler(delayChannel chan time.Duration, colorChannel chan bool) {
 	var delay time.Duration = 200
 	var delayStep time.Duration = DELAY_STEP
 
+	draw()
 mainloop:
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
@@ -165,13 +175,25 @@ mainloop:
 }
 
 
-func main() {	initLogging(DEFAULT_LOG)
-	var fileTypes = []string{".tf", ".sh", ".java", ".go"}
+func draw(){
+	const edit_box_width = 30
+	const coldef = termbox.ColorDefault
+	w, h := termbox.Size()
+	midy := h / 2
+	midx := (w - edit_box_width) / 2
+	tbprint(midx+8, midy+6, coldef, coldef, "Foobar")
+	termbox.Flush()
+
+}
+
+func main() {
+	initLogging(DEFAULT_LOG)
+	delayChannel := make(chan time.Duration)
+	colorChannel := make(chan bool)
+	var fileTypes= []string{".tf", ".sh", ".java", ".go"}
 	dir := flag.String("dir", "/", "directory to walk")
 	flag.Parse()
 	Info.Println("Walking Directory: ", *dir)
-	delayChannel := make(chan time.Duration)
-	colorChannel := make(chan bool)
 	go codeWalk(*dir, fileTypes, delayChannel, colorChannel)
 	keyHandler(delayChannel, colorChannel)
 }
