@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/fatih/color"
-	"github.com/mattn/go-runewidth"
 	"github.com/nsf/termbox-go"
 	"log"
 	"math/rand"
@@ -124,7 +123,6 @@ func keyHandler(delayChannel chan time.Duration, colorChannel chan bool) {
 	var delay time.Duration = 200
 	var delayStep time.Duration = DELAY_STEP
 
-	draw()
 mainloop:
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
@@ -180,18 +178,3 @@ func main() {
 	keyHandler(delayChannel, colorChannel)
 }
 
-func tbprint(x, y int, fg, bg termbox.Attribute, msg string) {
-	for _,c := range msg {
-		termbox.SetCell(x, y, c, fg, bg)
-		x += runewidth.RuneWidth(c)
-	}
-}
-func draw(){
-	const edit_box_width = 30
-	const coldef = termbox.ColorDefault
-	w, h := termbox.Size()
-	midy := h / 2
-	midx := (w - edit_box_width) / 2
-	tbprint(midx+8, midy+6, coldef, coldef, "Foobar")
-	termbox.Flush()
-}
