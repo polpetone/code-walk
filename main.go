@@ -112,7 +112,6 @@ func codeWalk(files []string, fileTypes []string, delayTimeInMsChannel chan time
 	}
 }
 
-
 func keyHandler(delayChannel chan time.Duration, colorChannel chan bool) {
 	err := termbox.Init()
 	if err != nil {
@@ -132,22 +131,10 @@ mainloop:
 				break mainloop
 			}
 			if ev.Ch == '+' {
-				if delay > 0 + delayStep {
-					delay = delay - delayStep
-				} else {
-					delayStep = delayStep / 2
-					if delay > 0 + delayStep {
-						delay = delay - delayStep
-					}
-				}
-				Info.Println("Delay:", delay)
-				delayChannel <- delay
+				delay, delayStep = decreaseDelay(delay, delayStep, delayChannel)
 			}
 			if ev.Ch == '-' {
-				delayStep = delayStep * 2
-				delay = delay + delayStep
-				Info.Println("Delay:", delay)
-				delayChannel <- delay
+				delay, delayStep = increaseDelay(delay, delayStep, delayChannel)
 			}
 			if ev.Ch == 'c' {
 				colorChannel <- true
@@ -161,11 +148,40 @@ mainloop:
 
 }
 
+func decreaseDelay(delay time.Duration,
+	delayStep time.Duration,
+	delayChannel chan time.Duration) (time.Duration, time.Duration) {
+	if delay > 0+delayStep {
+		delay = delay - delayStep
+	} else {
+		delayStep = delayStep / 2
+		if delay > 0+delayStep {
+			delay = delay - delayStep
+		}
+	}
+	Info.Println("Decreased Current Delay:", delay)
+	Info.Println("Adapt DelayStep to: ", delayStep)
+	delayChannel <- delay
+	return delay, delayStep
+}
+
+func increaseDelay(delay time.Duration,
+	delayStep time.Duration,
+	delayChannel chan time.Duration) (time.Duration, time.Duration) {
+	delayStep = delayStep * 2
+	delay = delay + delayStep
+	Info.Println("Delay:", delay)
+	Info.Println("Increased Current Delay:", delay)
+	Info.Println("Adapt DelayStep to: ", delayStep)
+	delayChannel <- delay
+	return delay, delayStep
+}
+
 func main() {
 	initLogging(DEFAULT_LOG)
 	delayChannel := make(chan time.Duration)
 	colorChannel := make(chan bool)
-	var fileTypes= []string{".tf", ".sh", ".java", ".go"}
+	var fileTypes = []string{".tf", ".sh", ".java", ".go"}
 	dir := flag.String("dir", "/", "directory to walk")
 	flag.Parse()
 	Info.Println("Walking Directory: ", *dir)
@@ -178,4 +194,3 @@ func main() {
 	go codeWalk(files, fileTypes, delayChannel, colorChannel)
 	keyHandler(delayChannel, colorChannel)
 }
-
