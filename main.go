@@ -54,7 +54,11 @@ func contains(slice []string, item string) bool {
 	return ok
 }
 
-func codeWalk(files []string, fileTypes []string, delayTimeInMsChannel chan time.Duration, colorChannel chan bool) {
+func codeWalk(files []string,
+	fileTypes []string,
+	delayTimeInMsChannel chan time.Duration,
+	colorChannel chan bool,
+	snapShotChannel chan bool) {
 	var currentDelay time.Duration = 2000000
 
 	fileMap := make(map[string][]string)
@@ -96,6 +100,14 @@ func codeWalk(files []string, fileTypes []string, delayTimeInMsChannel chan time
 				}
 
 				select {
+				case snapShotSignal := <-snapShotChannel:
+					if snapShotSignal {
+						Info.Println("SnapShot current file: ", fileName)
+					}
+				default:
+				}
+
+				select {
 				case colorSwitch := <-colorChannel:
 					randomColorIndex := rand.Intn(6)
 					if colorSwitch {
@@ -112,7 +124,7 @@ func codeWalk(files []string, fileTypes []string, delayTimeInMsChannel chan time
 	}
 }
 
-func keyHandler(delayChannel chan time.Duration, colorChannel chan bool) {
+func keyHandler(delayChannel chan time.Duration, colorChannel chan bool, snapShotChannel chan bool) {
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
@@ -138,6 +150,9 @@ mainloop:
 			}
 			if ev.Ch == 'c' {
 				colorChannel <- true
+			}
+			if ev.Ch == 's' {
+				snapShotChannel <- true
 			}
 		case termbox.EventError:
 			panic(ev.Err)
@@ -181,6 +196,7 @@ func main() {
 	initLogging(DEFAULT_LOG)
 	delayChannel := make(chan time.Duration)
 	colorChannel := make(chan bool)
+	snapShotChannel := make (chan bool)
 	var fileTypes = []string{".tf", ".sh", ".java", ".go"}
 	dir := flag.String("dir", "/", "directory to walk")
 	flag.Parse()
@@ -191,6 +207,6 @@ func main() {
 		panic(err)
 	}
 	Info.Println("Loaded ", len(files), "files")
-	go codeWalk(files, fileTypes, delayChannel, colorChannel)
-	keyHandler(delayChannel, colorChannel)
+	go codeWalk(files, fileTypes, delayChannel, colorChannel, snapShotChannel)
+	keyHandler(delayChannel, colorChannel, snapShotChannel)
 }
