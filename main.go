@@ -1,58 +1,17 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/nsf/termbox-go"
-	"log"
 	"math/rand"
-	"os"
 	"path/filepath"
 	"time"
 )
 
 const DEFAULT_LOG = "/tmp/code_walk.log"
 const DELAY_STEP = 20000
-
-func visit(files *[]string) filepath.WalkFunc {
-	return func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			log.Fatal(err)
-		}
-		if !info.IsDir() {
-			*files = append(*files, path)
-		}
-		return nil
-	}
-}
-
-func readFile(fileName string) ([]string, error) {
-	file, err := os.Open(fileName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	var text []string
-	for scanner.Scan() {
-		text = append(text, scanner.Text())
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-	return text, nil
-}
-
-func contains(slice []string, item string) bool {
-	set := make(map[string]struct{}, len(slice))
-	for _, s := range slice {
-		set[s] = struct{}{}
-	}
-	_, ok := set[item]
-	return ok
-}
 
 func codeWalk(files []string,
 	fileTypes []string,
@@ -160,7 +119,6 @@ mainloop:
 			break mainloop
 		}
 	}
-
 }
 
 func decreaseDelay(delay time.Duration,
@@ -185,7 +143,6 @@ func increaseDelay(delay time.Duration,
 	delayChannel chan time.Duration) (time.Duration, time.Duration) {
 	delayStep = delayStep * 2
 	delay = delay + delayStep
-	Info.Println("Delay:", delay)
 	Info.Println("Increased Current Delay:", delay)
 	Info.Println("Adapt DelayStep to: ", delayStep)
 	delayChannel <- delay
