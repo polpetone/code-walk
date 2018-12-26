@@ -14,6 +14,9 @@ import (
 const DEFAULT_LOG = "/tmp/code_walk.log"
 const DELAY_STEP = 20000
 
+var homeDir  = os.Getenv("HOME")
+var codeWalkDir = homeDir + "/.code_walk"
+
 func codeWalk(files []string,
 	fileTypes []string,
 	delayTimeInMsChannel chan time.Duration,
@@ -48,6 +51,8 @@ func codeWalk(files []string,
 
 	defer color.Unset()
 
+	var snapShotFile = "snapshot-" + time.Now().Format("2006-01-02_15:04:05")
+
 	for fileName, content := range fileMap {
 		Info.Println("Current File:", fileName)
 		for _, l := range content {
@@ -63,6 +68,10 @@ func codeWalk(files []string,
 				case snapShotSignal := <-snapShotChannel:
 					if snapShotSignal {
 						Info.Println("SnapShot current file: ", fileName)
+						err := appendLineToFile(codeWalkDir + "/"+ snapShotFile, fileName)
+						if err != nil {
+							Error.Println("Failed to write snapshot: ", err)
+						}
 					}
 				default:
 				}
@@ -151,8 +160,6 @@ func increaseDelay(delay time.Duration,
 }
 
 func initCodeWalk() {
-	homeDir := os.Getenv("HOME")
-	codeWalkDir := homeDir + "/.code_walk"
 	Info.Println("create if not exist: ", codeWalkDir)
 	createDirIfNotExist(codeWalkDir)
 }

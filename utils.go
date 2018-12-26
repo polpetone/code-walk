@@ -36,6 +36,35 @@ func readFile(fileName string) ([]string, error) {
 	return text, nil
 }
 
+func appendLineToFile(fileName string, content string) error {
+	var file, err = os.OpenFile(fileName, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0660)
+
+	if err == nil {
+		defer file.Close()
+		_, err = file.WriteString(content)
+		_, err = file.WriteString("\n")
+		if err == nil {
+			err = file.Sync()
+		}
+	}
+
+	return err
+}
+
+func createFile(filePath string) error {
+	var _, err = os.Stat(filePath)
+
+	if os.IsNotExist(err) {
+		var file, err = os.Create(filePath)
+		if err == nil {
+			defer file.Close()
+			return nil
+		}
+	}
+	return err
+}
+
+
 func contains(slice []string, item string) bool {
 	set := make(map[string]struct{}, len(slice))
 	for _, s := range slice {
