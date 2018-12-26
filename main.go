@@ -6,6 +6,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/nsf/termbox-go"
 	"math/rand"
+	"os"
 	"path/filepath"
 	"time"
 )
@@ -149,8 +150,16 @@ func increaseDelay(delay time.Duration,
 	return delay, delayStep
 }
 
+func initCodeWalk() {
+	homeDir := os.Getenv("HOME")
+	codeWalkDir := homeDir + "/.code_walk"
+	Info.Println("create if not exist: ", codeWalkDir)
+	createDirIfNotExist(codeWalkDir)
+}
+
 func main() {
 	initLogging(DEFAULT_LOG)
+	initCodeWalk()
 	delayChannel := make(chan time.Duration)
 	colorChannel := make(chan bool)
 	snapShotChannel := make (chan bool)

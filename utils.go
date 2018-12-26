@@ -44,3 +44,12 @@ func contains(slice []string, item string) bool {
 	_, ok := set[item]
 	return ok
 }
+
+func createDirIfNotExist(dir string) {
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err = os.MkdirAll(dir, 0755)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
