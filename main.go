@@ -19,5 +19,7 @@ func main() {
 	initLogging(DEFAULT_LOG)
 	initCodeWalk()
 
+
 	engine()
+
 }

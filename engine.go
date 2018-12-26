@@ -22,10 +22,13 @@ var colors = []color.Attribute{
 }
 
 func engine() {
+
 	delayChannel := make(chan time.Duration)
 	colorChannel := make(chan bool)
 	snapShotChannel := make(chan bool)
 	haltChannel := make(chan bool)
+	soundChannel := make(chan bool)
+
 	var fileTypes = []string{".tf", ".sh", ".java", ".go"}
 	dir := flag.String("dir", "/", "directory to walk")
 	flag.Parse()
@@ -38,15 +41,17 @@ func engine() {
 	}
 	Info.Println("Loaded ", len(files), "files")
 
+	go play("/home/icke/music/Super_Mario_Theme.mp3", soundChannel)
 	go codeWalk(files, fileTypes, delayChannel, colorChannel, snapShotChannel, haltChannel)
-	keyHandler(delayChannel, colorChannel, snapShotChannel, haltChannel)
+	keyHandler(delayChannel, colorChannel, snapShotChannel, haltChannel, soundChannel)
 }
 
 func keyHandler(
 	delayChannel chan time.Duration,
 	colorChannel chan bool,
 	snapShotChannel chan bool,
-	haltChannel chan bool) {
+	haltChannel chan bool,
+	someChannel chan bool) {
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
@@ -56,6 +61,8 @@ func keyHandler(
 	var delay time.Duration = 200
 	var delayStep time.Duration = DELAY_STEP
 
+	defer Info.Println("KeyHandler stopped")
+
 mainloop:
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
@@ -64,8 +71,13 @@ mainloop:
 			case termbox.KeyEsc:
 				break mainloop
 			}
+			Info.Println("Pressed: ", ev.Ch)
 			if ev.Ch == '+' {
 				delay, delayStep = decreaseDelay(delay, delayStep, delayChannel)
+			}
+			if ev.Ch == 'm' {
+				someChannel <- true
+				Info.Println("Buggi boo")
 			}
 			if ev.Ch == '-' {
 				delay, delayStep = increaseDelay(delay, delayStep, delayChannel)
@@ -85,36 +97,6 @@ mainloop:
 			break mainloop
 		}
 	}
-}
-
-func decreaseDelay(delay time.Duration,
-	delayStep time.Duration,
-	delayChannel chan time.Duration) (time.Duration, time.Duration) {
-
-	if delay > 0+delayStep {
-		delay = delay - delayStep
-	} else {
-		delayStep = delayStep / 2
-		if delay > 0+delayStep {
-			delay = delay - delayStep
-		}
-	}
-	Info.Println("Decreased Current Delay:", delay)
-	Info.Println("Adapt DelayStep to: ", delayStep)
-	delayChannel <- delay
-	return delay, delayStep
-}
-
-func increaseDelay(delay time.Duration,
-	delayStep time.Duration,
-	delayChannel chan time.Duration) (time.Duration, time.Duration) {
-
-	delayStep = delayStep * 2
-	delay = delay + delayStep
-	Info.Println("Increased Current Delay:", delay)
-	Info.Println("Adapt DelayStep to: ", delayStep)
-	delayChannel <- delay
-	return delay, delayStep
 }
 
 func codeWalk(files []string,
@@ -150,7 +132,6 @@ func codeWalk(files []string,
 	var lastDelay time.Duration
 
 	for fileName, content := range fileMap {
-		Info.Println("Current File:", fileName)
 		for _, l := range content {
 			for _, x := range l {
 
@@ -203,4 +184,34 @@ func codeWalk(files []string,
 			fmt.Println("")
 		}
 	}
+}
+
+func decreaseDelay(delay time.Duration,
+	delayStep time.Duration,
+	delayChannel chan time.Duration) (time.Duration, time.Duration) {
+
+	if delay > 0+delayStep {
+		delay = delay - delayStep
+	} else {
+		delayStep = delayStep / 2
+		if delay > 0+delayStep {
+			delay = delay - delayStep
+		}
+	}
+	Info.Println("Decreased Current Delay:", delay)
+	Info.Println("Adapt DelayStep to: ", delayStep)
+	delayChannel <- delay
+	return delay, delayStep
+}
+
+func increaseDelay(delay time.Duration,
+	delayStep time.Duration,
+	delayChannel chan time.Duration) (time.Duration, time.Duration) {
+
+	delayStep = delayStep * 2
+	delay = delay + delayStep
+	Info.Println("Increased Current Delay:", delay)
+	Info.Println("Adapt DelayStep to: ", delayStep)
+	delayChannel <- delay
+	return delay, delayStep
 }
