@@ -25,6 +25,7 @@ func engine() {
 	delayChannel := make(chan time.Duration)
 	colorChannel := make(chan bool)
 	snapShotChannel := make(chan bool)
+	haltChannel := make(chan bool)
 	var fileTypes = []string{".tf", ".sh", ".java", ".go"}
 	dir := flag.String("dir", "/", "directory to walk")
 	flag.Parse()
@@ -37,11 +38,15 @@ func engine() {
 	}
 	Info.Println("Loaded ", len(files), "files")
 
-	go codeWalk(files, fileTypes, delayChannel, colorChannel, snapShotChannel)
-	keyHandler(delayChannel, colorChannel, snapShotChannel)
+	go codeWalk(files, fileTypes, delayChannel, colorChannel, snapShotChannel, haltChannel)
+	keyHandler(delayChannel, colorChannel, snapShotChannel, haltChannel)
 }
 
-func keyHandler(delayChannel chan time.Duration, colorChannel chan bool, snapShotChannel chan bool) {
+func keyHandler(
+	delayChannel chan time.Duration,
+	colorChannel chan bool,
+	snapShotChannel chan bool,
+	haltChannel chan bool) {
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
@@ -71,6 +76,9 @@ mainloop:
 			if ev.Ch == 's' {
 				snapShotChannel <- true
 			}
+			if ev.Ch == 'h' {
+				haltChannel <- true
+			}
 		case termbox.EventError:
 			panic(ev.Err)
 		case termbox.EventInterrupt:
@@ -82,6 +90,7 @@ mainloop:
 func decreaseDelay(delay time.Duration,
 	delayStep time.Duration,
 	delayChannel chan time.Duration) (time.Duration, time.Duration) {
+
 	if delay > 0+delayStep {
 		delay = delay - delayStep
 	} else {
@@ -99,6 +108,7 @@ func decreaseDelay(delay time.Duration,
 func increaseDelay(delay time.Duration,
 	delayStep time.Duration,
 	delayChannel chan time.Duration) (time.Duration, time.Duration) {
+
 	delayStep = delayStep * 2
 	delay = delay + delayStep
 	Info.Println("Increased Current Delay:", delay)
@@ -111,7 +121,9 @@ func codeWalk(files []string,
 	fileTypes []string,
 	delayTimeInMsChannel chan time.Duration,
 	colorChannel chan bool,
-	snapShotChannel chan bool) {
+	snapShotChannel chan bool,
+	haltChannel chan bool) {
+
 	var currentDelay time.Duration = 2000000
 
 	fileMap := make(map[string][]string)
@@ -134,6 +146,9 @@ func codeWalk(files []string,
 
 	var snapShotFile = "snapshot-" + time.Now().Format("2006-01-02_15:04:05")
 
+	var haltSwitch = false
+	var lastDelay time.Duration
+
 	for fileName, content := range fileMap {
 		Info.Println("Current File:", fileName)
 		for _, l := range content {
@@ -142,6 +157,22 @@ func codeWalk(files []string,
 				select {
 				case delayTimeInMs := <-delayTimeInMsChannel:
 					currentDelay = delayTimeInMs
+				default:
+				}
+
+				select {
+				case <-haltChannel:
+					Info.Println("Halt pressed")
+					if haltSwitch ==  false{
+						haltSwitch = true
+						lastDelay = currentDelay
+						currentDelay = 10 * time.Second
+						Info.Println("Enabled Halt -> Current Delay: ", currentDelay)
+					} else {
+						haltSwitch = false
+						currentDelay = lastDelay
+						Info.Println("Disabled Halt -> Current Delay: ", currentDelay)
+					}
 				default:
 				}
 
