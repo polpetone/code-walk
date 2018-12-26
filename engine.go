@@ -41,7 +41,8 @@ func engine() {
 	}
 	Info.Println("Loaded ", len(files), "files")
 
-	go play("/home/icke/music/Super_Mario_Theme.mp3", soundChannel)
+	var songs = []string {"/home/icke/music/Rise_Against_Savior.mp3", "/home/icke/music/Super_Mario_Theme.mp3"}
+	go start(songs, soundChannel)
 	go codeWalk(files, fileTypes, delayChannel, colorChannel, snapShotChannel, haltChannel)
 	keyHandler(delayChannel, colorChannel, snapShotChannel, haltChannel, soundChannel)
 }
@@ -51,7 +52,7 @@ func keyHandler(
 	colorChannel chan bool,
 	snapShotChannel chan bool,
 	haltChannel chan bool,
-	someChannel chan bool) {
+	soundChannel chan bool) {
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
@@ -74,13 +75,11 @@ mainloop:
 			Info.Println("Pressed: ", ev.Ch)
 			if ev.Ch == '+' {
 				delay, delayStep = decreaseDelay(delay, delayStep, delayChannel)
-			}
-			if ev.Ch == 'm' {
-				someChannel <- true
-				Info.Println("Buggi boo")
+				soundChannel <- true
 			}
 			if ev.Ch == '-' {
 				delay, delayStep = increaseDelay(delay, delayStep, delayChannel)
+				soundChannel <- false
 			}
 			if ev.Ch == 'c' {
 				colorChannel <- true
