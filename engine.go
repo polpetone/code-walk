@@ -27,7 +27,6 @@ func engine() {
 	colorChannel := make(chan bool)
 	snapShotChannel := make(chan bool)
 	haltChannel := make(chan bool)
-	soundChannel := make(chan bool)
 
 	var fileTypes = []string{".tf", ".sh", ".java", ".go"}
 	dir := flag.String("dir", "/", "directory to walk")
@@ -41,18 +40,15 @@ func engine() {
 	}
 	Info.Println("Loaded ", len(files), "files")
 
-	var songs = []string {"/home/icke/music/Rise_Against_Savior.mp3", "/home/icke/music/Super_Mario_Theme.mp3"}
-	go start(songs, soundChannel)
 	go codeWalk(files, fileTypes, delayChannel, colorChannel, snapShotChannel, haltChannel)
-	keyHandler(delayChannel, colorChannel, snapShotChannel, haltChannel, soundChannel)
+	keyHandler(delayChannel, colorChannel, snapShotChannel, haltChannel)
 }
 
 func keyHandler(
 	delayChannel chan time.Duration,
 	colorChannel chan bool,
 	snapShotChannel chan bool,
-	haltChannel chan bool,
-	soundChannel chan bool) {
+	haltChannel chan bool) {
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
@@ -75,11 +71,9 @@ mainloop:
 			Info.Println("Pressed: ", ev.Ch)
 			if ev.Ch == '+' {
 				delay, delayStep = decreaseDelay(delay, delayStep, delayChannel)
-				soundChannel <- true
 			}
 			if ev.Ch == '-' {
 				delay, delayStep = increaseDelay(delay, delayStep, delayChannel)
-				soundChannel <- false
 			}
 			if ev.Ch == 'c' {
 				colorChannel <- true
