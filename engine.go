@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/nsf/termbox-go"
@@ -21,23 +20,12 @@ var colors = []color.Attribute{
 	color.FgHiWhite,
 }
 
-func engine() {
-
+func engine(files []string, fileTypes []string) {
 	delayChannel := make(chan time.Duration)
 	colorChannel := make(chan bool)
 	snapShotChannel := make(chan bool)
 	haltChannel := make(chan bool)
 
-	var fileTypes = []string{".tf", ".sh", ".java", ".go"}
-	dir := flag.String("dir", "/", "directory to walk")
-	flag.Parse()
-	Info.Println("Walking Directory: ", *dir)
-	var files []string
-	err := filepath.Walk(*dir, visit(&files))
-
-	if err != nil {
-		panic(err)
-	}
 	Info.Println("Loaded ", len(files), "files")
 
 	go codeWalk(files, fileTypes, delayChannel, colorChannel, snapShotChannel, haltChannel)
