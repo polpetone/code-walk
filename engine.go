@@ -80,6 +80,20 @@ mainloop:
 	}
 }
 
+func loadFileContentMap(files []string, fileTypes []string) map[string][]string {
+	fileContentMap := make(map[string][]string)
+	for _, file := range files {
+		var extension = filepath.Ext(file)
+		if contains(fileTypes, extension) {
+			content, err := readFile(file)
+			if err == nil {
+				fileContentMap[file] = content
+			}
+		}
+	}
+	return fileContentMap
+}
+
 func codeWalk(files []string,
 	fileTypes []string,
 	delayTimeInMsChannel chan time.Duration,
@@ -89,17 +103,7 @@ func codeWalk(files []string,
 
 	var currentDelay time.Duration = 2000000
 
-	fileMap := make(map[string][]string)
-
-	for _, file := range files {
-		var extension = filepath.Ext(file)
-		if contains(fileTypes, extension) {
-			content, err := readFile(file)
-			if err == nil {
-				fileMap[file] = content
-			}
-		}
-	}
+	fileContentMap := loadFileContentMap(files, fileTypes)
 
 	color.Set(color.FgHiGreen)
 
@@ -112,7 +116,7 @@ func codeWalk(files []string,
 	var haltSwitch = false
 	var lastDelay time.Duration
 
-	for fileName, content := range fileMap {
+	for fileName, content := range fileContentMap {
 		for _, l := range content {
 			for _, x := range l {
 
