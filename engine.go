@@ -5,6 +5,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/nsf/termbox-go"
 	"math/rand"
+	"net"
+	"net/http"
+	"net/rpc"
 	"path/filepath"
 	"time"
 )
@@ -20,6 +23,31 @@ var colors = []color.Attribute{
 	color.FgHiWhite,
 }
 
+type Command int
+
+func (c *Command) Receive(key string, reply *string) error {
+	Info.Println("received key", key)
+	return nil
+}
+
+func server(){
+	command := new(Command)
+	err := rpc.Register(command)
+	if err != nil {
+		Error.Println("Format of service Command isn't correct", err)
+	}
+	rpc.HandleHTTP()
+	listener, e := net.Listen("tcp", ":8123")
+	if e != nil {
+		Error.Println("Listen error: ", e)
+	}
+	Info.Println("Serving RPC server on port ", 8123)
+	err = http.Serve(listener, nil)
+	if err != nil {
+		Error.Println("Error serving: ", err)
+	}
+}
+
 func engine(files []string, fileTypes []string) {
 	delayChannel := make(chan time.Duration)
 	colorChannel := make(chan bool)
@@ -28,6 +56,7 @@ func engine(files []string, fileTypes []string) {
 
 	Info.Println("Loaded ", len(files), "files")
 
+	go server()
 	go codeWalk(files, fileTypes, delayChannel, colorChannel, snapShotChannel, haltChannel)
 	keyHandler(delayChannel, colorChannel, snapShotChannel, haltChannel)
 }
