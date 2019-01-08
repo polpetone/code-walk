@@ -14,6 +14,8 @@ import (
 
 const DELAY_STEP = 20000
 
+var colorChannel = make(chan bool)
+
 var colors = []color.Attribute{
 	color.FgHiGreen,
 	color.FgBlue,
@@ -27,6 +29,7 @@ type Command int
 
 func (c *Command) Receive(key string, reply *string) error {
 	Info.Println("received key", key)
+	colorChannel <- true
 	return nil
 }
 
@@ -50,20 +53,18 @@ func server(){
 
 func engine(files []string, fileTypes []string) {
 	delayChannel := make(chan time.Duration)
-	colorChannel := make(chan bool)
 	snapShotChannel := make(chan bool)
 	haltChannel := make(chan bool)
 
 	Info.Println("Loaded ", len(files), "files")
 
 	go server()
-	go codeWalk(files, fileTypes, delayChannel, colorChannel, snapShotChannel, haltChannel)
-	keyHandler(delayChannel, colorChannel, snapShotChannel, haltChannel)
+	go codeWalk(files, fileTypes, delayChannel, snapShotChannel, haltChannel)
+	keyHandler(delayChannel, snapShotChannel, haltChannel)
 }
 
 func keyHandler(
 	delayChannel chan time.Duration,
-	colorChannel chan bool,
 	snapShotChannel chan bool,
 	haltChannel chan bool) {
 	err := termbox.Init()
@@ -126,7 +127,6 @@ func loadFileContentMap(files []string, fileTypes []string) map[string][]string 
 func codeWalk(files []string,
 	fileTypes []string,
 	delayTimeInMsChannel chan time.Duration,
-	colorChannel chan bool,
 	snapShotChannel chan bool,
 	haltChannel chan bool) {
 
