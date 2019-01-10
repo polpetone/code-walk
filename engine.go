@@ -33,6 +33,16 @@ func (c *Command) Receive(key string, reply *string) error {
 	return nil
 }
 
+func client(msg string) {
+	var reply string
+	client, err := rpc.DialHTTP("tcp", "localhost:8823")
+	if err != nil {
+		fmt.Println("Connection error: ", err)
+	}
+	client.Call("Command.Receive", msg, &reply)
+}
+
+
 func server(){
 	command := new(Command)
 	err := rpc.Register(command)
@@ -58,7 +68,6 @@ func engine(files []string, fileTypes []string) {
 
 	Info.Println("Loaded ", len(files), "files")
 
-	go server()
 	go codeWalk(files, fileTypes, delayChannel, snapShotChannel, haltChannel)
 	keyHandler(delayChannel, snapShotChannel, haltChannel)
 }
@@ -94,6 +103,7 @@ mainloop:
 				delay, delayStep = increaseDelay(delay, delayStep, delayChannel)
 			}
 			if ev.Ch == 'c' {
+				go client("Color changed")
 				colorChannel <- true
 			}
 			if ev.Ch == 's' {
@@ -146,6 +156,7 @@ func codeWalk(files []string,
 	var lastDelay time.Duration
 
 	for fileName, content := range fileContentMap {
+		go client(fileName)
 		for _, l := range content {
 			for _, x := range l {
 
