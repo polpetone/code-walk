@@ -27,7 +27,7 @@ func keyHandler(
 
 mainloop:
 	for {
-		Info.Println("HackerTyperMode:", hackerTyperMode)
+		Trace.Println("HackerTyperMode:", hackerTyperMode)
 
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
