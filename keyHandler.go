@@ -9,7 +9,8 @@ func keyHandler(
 	delayChannel chan time.Duration,
 	snapShotChannel chan bool,
 	haltChannel chan bool,
-	continueChannel chan bool) {
+	continueChannel chan bool,
+) {
 
 	err := termbox.Init()
 	if err != nil {
@@ -22,38 +23,71 @@ func keyHandler(
 
 	defer Info.Println("KeyHandler stopped")
 
+	var hackerTyperMode = false
+
 mainloop:
 	for {
+		Info.Println("HackerTyperMode:", hackerTyperMode)
+
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
 			switch ev.Key {
 			case termbox.KeyEsc:
 				break mainloop
 			}
-			Info.Println("Pressed: ", ev.Ch)
-			if ev.Ch == '+' {
-				delay, delayStep = decreaseDelay(delay, delayStep, delayChannel)
+
+			if ev.Ch == 'm' {
+				if hackerTyperMode {
+					hackerTyperMode = false
+				} else {
+					hackerTyperMode = true
+				}
 			}
-			if ev.Ch == '-' {
-				delay, delayStep = increaseDelay(delay, delayStep, delayChannel)
+
+			if hackerTyperMode {
+				if ev.Ch == 'w' {
+					haltChannel <- true
+					time.Sleep(100 * time.Millisecond)
+					continueChannel <- true
+				}
+			} else {
+				delay, delayStep = commandMode(ev, delay, delayStep, delayChannel, snapShotChannel, haltChannel, continueChannel)
 			}
-			if ev.Ch == 'c' {
-				go client("Color changed")
-				colorChannel <- true
-			}
-			if ev.Ch == 's' {
-				snapShotChannel <- true
-			}
-			if ev.Ch == 'h' {
-				haltChannel <- true
-			}
-			if ev.Ch == 'g' {
-				continueChannel <- true
-			}
+
 		case termbox.EventError:
 			panic(ev.Err)
 		case termbox.EventInterrupt:
 			break mainloop
 		}
+
 	}
+}
+
+func commandMode(ev termbox.Event, delay time.Duration, delayStep time.Duration,
+	delayChannel chan time.Duration,
+	snapShotChannel chan bool,
+	haltChannel chan bool,
+	continueChannel chan bool,
+) (time.Duration, time.Duration) {
+	Info.Println("Pressed: ", ev.Ch)
+	if ev.Ch == '+' {
+		delay, delayStep = decreaseDelay(delay, delayStep, delayChannel)
+	}
+	if ev.Ch == '-' {
+		delay, delayStep = increaseDelay(delay, delayStep, delayChannel)
+	}
+	if ev.Ch == 'c' {
+		go client("Color changed")
+		colorChannel <- true
+	}
+	if ev.Ch == 's' {
+		snapShotChannel <- true
+	}
+	if ev.Ch == 'h' {
+		haltChannel <- true
+	}
+	if ev.Ch == 'g' {
+		continueChannel <- true
+	}
+	return delay, delayStep
 }

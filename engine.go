@@ -67,7 +67,6 @@ func codeWalk(files []string,
 
 				select {
 				case <-haltChannel:
-					Info.Println("Halt toggled")
 					if halt {
 						halt = false
 					} else {
@@ -75,15 +74,12 @@ func codeWalk(files []string,
 					}
 					<-continueChannel
 				default:
-					Info.Println("select halt channel default")
 				}
 
 				if !halt {
 					select {
 					case <-continueChannel:
-						Info.Println("continue channel consumed")
 					default:
-						Info.Println("!halt default select continue channel")
 					}
 				}
 
