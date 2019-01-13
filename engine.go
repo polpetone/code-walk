@@ -41,7 +41,7 @@ func engine(files []string, fileTypes []string) {
 	keyHandler(delayChannel, snapShotChannel, haltChannel, continueChannel)
 }
 
-func codePrinter(tactChannel chan struct{}, snapShotChannel chan struct{}, contentMap map[string][]string) {
+func codePrinter(tactChannel chan bool, snapShotChannel chan bool, contentMap map[string][]string) {
 	for fileName, content := range contentMap {
 		go client(fileName)
 		for _, l := range content {
@@ -56,11 +56,10 @@ func codePrinter(tactChannel chan struct{}, snapShotChannel chan struct{}, conte
 					if err != nil {
 						Error.Println("Failed to write snapshot: ", err)
 					}
-				default:
 				}
 			}
+			fmt.Println("")
 		}
-		fmt.Println("")
 	}
 }
 
@@ -71,26 +70,39 @@ func codeWalk(files []string,
 	haltChannel chan bool,
 	continueChannel chan bool) {
 
-	var currentDelay time.Duration = 2000000
+	tactChannel := make(chan bool)
+
+	var halt = false
+	var currentDelay = 100 * time.Millisecond
 	fileContentMap := loadFileContentMap(files, fileTypes)
 	color.Set(color.FgHiGreen)
 	rand.Seed(time.Now().Unix())
 	defer color.Unset()
 
-	select {
-	case colorSwitch := <-colorChannel:
-		randomColorIndex := rand.Intn(6)
-		if colorSwitch {
-			color.Set(colors[randomColorIndex])
+	go codePrinter(tactChannel, snapShotChannel, fileContentMap)
+
+	for {
+		time.Sleep(currentDelay)
+
+		if !halt {
+			tactChannel <- true
 		}
-	case delayTimeInMs := <-delayTimeInMsChannel:
-		currentDelay = delayTimeInMs
 
-
-	default:
+		select {
+		case colorSwitch := <-colorChannel:
+			randomColorIndex := rand.Intn(6)
+			if colorSwitch {
+				color.Set(colors[randomColorIndex])
+			}
+		case delayTimeInMs := <-delayTimeInMsChannel:
+			currentDelay = delayTimeInMs
+		case <-haltChannel:
+			halt = true
+		case <- continueChannel:
+			halt = false
+		default:
+		}
 	}
-
-	time.Sleep(currentDelay * time.Nanosecond)
 }
 
 func loadFileContentMap(files []string, fileTypes []string) map[string][]string {

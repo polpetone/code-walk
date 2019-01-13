@@ -41,14 +41,14 @@ mainloop:
 					hackerTyperMode = false
 				} else {
 					hackerTyperMode = true
+					haltChannel <- true
 				}
 			}
 
 			if hackerTyperMode {
-				if ev.Ch == 'w' {
-					haltChannel <- true
-					time.Sleep(100 * time.Millisecond)
+				if ev.Ch != 'm' {
 					continueChannel <- true
+					haltChannel <- true
 				}
 			} else {
 				delay, delayStep = commandMode(ev, delay, delayStep, delayChannel, snapShotChannel, haltChannel, continueChannel)
