@@ -84,12 +84,13 @@ func codeWalk(files []string,
 				}
 
 				select {
+				case colorSwitch := <-colorChannel:
+					randomColorIndex := rand.Intn(6)
+					if colorSwitch {
+						color.Set(colors[randomColorIndex])
+					}
 				case delayTimeInMs := <-delayTimeInMsChannel:
 					currentDelay = delayTimeInMs
-				default:
-				}
-
-				select {
 				case snapShotSignal := <-snapShotChannel:
 					if snapShotSignal {
 						Info.Println("SnapShot current file: ", fileName)
@@ -97,15 +98,6 @@ func codeWalk(files []string,
 						if err != nil {
 							Error.Println("Failed to write snapshot: ", err)
 						}
-					}
-				default:
-				}
-
-				select {
-				case colorSwitch := <-colorChannel:
-					randomColorIndex := rand.Intn(6)
-					if colorSwitch {
-						color.Set(colors[randomColorIndex])
 					}
 				default:
 				}
