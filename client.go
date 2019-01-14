@@ -4,12 +4,15 @@ import (
 	"net/rpc"
 )
 
-func client(msg string) {
+func sendTo(info CodeWalkFileInfo) {
 	var reply string
 	client, err := rpc.DialHTTP("tcp", "localhost:8823")
 	if err != nil {
 		Error.Println("Connection error: ", err)
 	} else {
-		client.Call("Command.Receive", msg, &reply)
+		callErr := client.Call("Command.Receive", info, &reply)
+		if callErr != nil {
+			Error.Println(callErr)
+		}
 	}
 }

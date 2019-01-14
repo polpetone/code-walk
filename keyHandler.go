@@ -77,7 +77,6 @@ func commandMode(ev termbox.Event, delay time.Duration, delayStep time.Duration,
 		delay, delayStep = increaseDelay(delay, delayStep, delayChannel)
 	}
 	if ev.Ch == 'c' {
-		go client("Color changed")
 		colorChannel <- true
 	}
 	if ev.Ch == 's' {

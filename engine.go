@@ -23,6 +23,12 @@ var colors = []color.Attribute{
 
 type Command int
 
+type CodeWalkFileInfo struct {
+	Authors []string
+	FileName string
+}
+
+
 func (c *Command) Receive(key string, reply *string) error {
 	Info.Println("received key", key)
 	colorChannel <- true
@@ -41,10 +47,19 @@ func engine(files []string, fileTypes []string) {
 	keyHandler(delayChannel, snapShotChannel, haltChannel, continueChannel)
 }
 
+func sendCodeWalkFileInfo(fileName string){
+	authors, _ := getGitAuthors(fileName)
+	go sendTo(
+		CodeWalkFileInfo{
+			FileName:fileName,
+			Authors: authors,
+		},
+	)
+}
+
 func codePrinter(tactChannel chan bool, snapShotChannel chan bool, contentMap map[string][]string) {
 	for fileName, content := range contentMap {
-		go client(fileName)
-		Info.Println(getGitAuthors(fileName))
+		go sendCodeWalkFileInfo(fileName)
 		for _, l := range content {
 			for _, x := range l {
 				select {
