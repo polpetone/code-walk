@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func visit(files *[]string) filepath.WalkFunc {
@@ -82,3 +83,19 @@ func createDirIfNotExist(dir string) {
 		}
 	}
 }
+
+func cutFileNameFromPath(path string) (string, string){
+
+	i := strings.LastIndex(path, "/")
+	fileName := path[i+1:]
+	dir := path[:i]
+
+	return fileName, dir
+}
+
+func removeWordFromString(s string, word string) string {
+	return strings.TrimSpace(strings.TrimPrefix(s, word))
+}
+
+
+

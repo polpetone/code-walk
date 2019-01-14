@@ -30,6 +30,7 @@ func readSrcFiles(dir string) []string {
 
 func main() {
 	initLogging(DEFAULT_LOG)
+
 	initCodeWalk()
 
 	dir := flag.String("dir", "/", "directory to walk")

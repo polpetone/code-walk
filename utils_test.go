@@ -1,4 +1,4 @@
-package tests
+package main
 
 import (
 	"fmt"
@@ -47,4 +47,19 @@ func TestGenerateDateStrings(t *testing.T){
 	fmt.Println("Short Hour Minute Second: ", currentTime.Format("2006-01-02 3:4:5 PM"))
 
 	fmt.Println("Short Hour Minute Second: ", currentTime.Format("2006-01-02 3:4:5 pm"))
+}
+
+func TestCutFilenameFromPath(t *testing.T) {
+
+	path := "/foo/bar/file.go"
+	fileName, dir := cutFileNameFromPath(path)
+
+	//TODO: asserts + more test cases
+	fmt.Println(fileName)
+	fmt.Println(dir)
+}
+
+func TestRemoveWordFromString(t *testing.T){
+	s := removeWordFromString("author foo bar", "author")
+	fmt.Println(s)
 }

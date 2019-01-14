@@ -44,6 +44,7 @@ func engine(files []string, fileTypes []string) {
 func codePrinter(tactChannel chan bool, snapShotChannel chan bool, contentMap map[string][]string) {
 	for fileName, content := range contentMap {
 		go client(fileName)
+		Info.Println(getGitAuthors(fileName))
 		for _, l := range content {
 			for _, x := range l {
 				select {
