@@ -13,6 +13,8 @@ var codeWalkDir = homeDir + "/.code_walk"
 var fileTypes = []string{".tf", ".sh", ".java", ".go"}
 
 
+var codeChannel = make(chan string)
+
 func initCodeWalk() {
 	Info.Println("create if not exist: ", codeWalkDir)
 	createDirIfNotExist(codeWalkDir)
@@ -37,5 +39,7 @@ func main() {
 	flag.Parse()
 	files := readSrcFiles(*dir)
 
-	engine(files, fileTypes)
+
+	go engine(files, fileTypes)
+	ui()
 }

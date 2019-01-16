@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/fatih/color"
 	"math/rand"
 	"path/filepath"
@@ -64,7 +63,7 @@ func codePrinter(tactChannel chan bool, snapShotChannel chan bool, contentMap ma
 			for _, x := range l {
 				select {
 				case <-tactChannel:
-					fmt.Print(string(x))
+					codeChannel <- string(x)
 				case <-snapShotChannel:
 					var snapShotFile = "snapshot-" + time.Now().Format("2006-01-02_15:04:05")
 					Info.Println("SnapShot current file: ", fileName)
@@ -74,7 +73,7 @@ func codePrinter(tactChannel chan bool, snapShotChannel chan bool, contentMap ma
 					}
 				}
 			}
-			fmt.Println("")
+			codeChannel <- "\n"
 		}
 	}
 }
