@@ -4,22 +4,24 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/marcusolsson/tui-go"
+	"time"
 )
 
-var codeWalkFileInfoChannel = make(chan CodeWalkFileInfo)
-
 func ui() {
-	ui, w , w2:= setupUI()
+	ui, codeBoxWriter, authorsBoxWriter, fileInfoBoxWriter := setupUI()
 	go runUI(ui)
 	for {
 		select {
 		case code := <-codeChannel:
-			fmt.Fprint(w, code)
+			fmt.Fprint(codeBoxWriter, code)
 		case text := <-codeWalkFileInfoChannel:
-			w2.buf.Reset()
-			w2.Label.SetText("")
+			authorsBoxWriter.buf.Reset()
+			authorsBoxWriter.Label.SetText("")
+			fileInfoBoxWriter.buf.Reset()
+			fileInfoBoxWriter.Label.SetText("")
+			fmt.Fprintln(fileInfoBoxWriter, text.FileName)
 			for _, a := range text.Authors {
-				fmt.Fprintln(w2, a)
+				fmt.Fprintln(authorsBoxWriter, a)
 			}
 		default:
 		}
@@ -46,7 +48,10 @@ func (w *labelWriter) Write(p []byte) (n int, err error) {
 	return
 }
 
-func setupUI() (tui.UI, *labelWriter, *labelWriter) {
+var delay time.Duration = 200
+var delayStep time.Duration = DELAY_STEP
+
+func setupUI() (tui.UI, *labelWriter, *labelWriter, *labelWriter) {
 
 	header := tui.NewHBox()
 	header.SetBorder(true)
@@ -56,16 +61,27 @@ func setupUI() (tui.UI, *labelWriter, *labelWriter) {
 		tui.NewLabel("CODE WALK"),
 		))
 
+	codeBox := tui.NewVBox()
+	codeBox.SetSizePolicy(tui.Expanding, tui.Expanding)
 
-	fileInfoBox := tui.NewVBox()
-	fileInfoBox.SetBorder(true)
-	fileInfoBox.SetSizePolicy(tui.Expanding, tui.Maximum)
+	codeBoxScroll := tui.NewScrollArea(codeBox)
+	codeBoxScroll.SetAutoscrollToBottom(true)
+
+	box := tui.NewVBox(codeBoxScroll)
+	box.SetBorder(true)
+	box.SetSizePolicy(tui.Expanding, tui.Maximum)
 
 	authorsBox := tui.NewVBox()
 	authorsBox.SetBorder(true)
 	authorsBox.SetSizePolicy(tui.Expanding, tui.Maximum)
 
-	container := tui.NewHBox(fileInfoBox, authorsBox)
+	fileInfoBox := tui.NewVBox()
+	fileInfoBox.SetBorder(true)
+	fileInfoBox.SetSizePolicy(tui.Expanding, tui.Maximum)
+
+	fileInfoAuthorsContainer := tui.NewVBox(fileInfoBox, authorsBox)
+
+	container := tui.NewHBox(box, fileInfoAuthorsContainer)
 	container.SetSizePolicy(tui.Expanding, tui.Maximum)
 
 	root := tui.NewVBox(header, container)
@@ -75,11 +91,38 @@ func setupUI() (tui.UI, *labelWriter, *labelWriter) {
 	}
 	ui.SetKeybinding("ESC", func()  {ui.Quit()})
 
+	ui.SetKeybinding("c", func() {
+		colorChannel <- true
+		Trace.Println("UI Keybinding Pressed c")
+	})
+
+	ui.SetKeybinding("+", func() {
+		delay, delayStep = decreaseDelay(delay, delayStep, delayChannel)
+		Trace.Println("UI Keybinding Pressed +")
+	})
+
+	ui.SetKeybinding("-", func() {
+		delay, delayStep = increaseDelay(delay, delayStep, delayChannel)
+		Trace.Println("UI Keybinding Pressed -")
+	})
+
+	ui.SetKeybinding("h", func() {
+		haltChannel <-true
+		Trace.Println("UI Keybinding Pressed h")
+	})
+
+	ui.SetKeybinding("g", func() {
+		continueChannel <-true
+		Trace.Println("UI Keybinding Pressed g")
+	})
+
+	codeBoxWriter := &labelWriter{ui : ui}
 	fileInfoBoxWriter := &labelWriter{ui : ui}
 	authorsBoxWriter := &labelWriter{ui : ui}
-	fileInfoBox.Append(fileInfoBoxWriter)
+	codeBox.Append(codeBoxWriter)
 	authorsBox.Append(authorsBoxWriter)
-	return ui, fileInfoBoxWriter, authorsBoxWriter
+	fileInfoBox.Append(fileInfoBoxWriter)
+	return ui, codeBoxWriter, authorsBoxWriter, fileInfoBoxWriter
 }
 
 func runUI(ui tui.UI){
@@ -87,3 +130,8 @@ func runUI(ui tui.UI){
 		Error.Println(err)
 	}
 }
+
+
+
+
+

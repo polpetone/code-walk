@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const DELAY_STEP = 20000
+const DELAY_STEP = 100 * time.Millisecond
 
 var colorChannel = make(chan bool)
 
@@ -27,6 +27,11 @@ type CodeWalkFileInfo struct {
 	FileName string
 }
 
+var delayChannel = make(chan time.Duration, 10)
+var snapShotChannel = make(chan bool, 10)
+var haltChannel = make(chan bool)
+var continueChannel = make(chan bool)
+var codeWalkFileInfoChannel = make(chan CodeWalkFileInfo)
 
 func (c *Command) Receive(key string, reply *string) error {
 	Info.Println("received key", key)
@@ -35,25 +40,17 @@ func (c *Command) Receive(key string, reply *string) error {
 }
 
 func engine(files []string, fileTypes []string) {
-	delayChannel := make(chan time.Duration, 10)
-	snapShotChannel := make(chan bool, 10)
-	haltChannel := make(chan bool)
-	continueChannel := make(chan bool)
-
 	Info.Println("Loaded ", len(files), "files")
-
-	go codeWalk(files, fileTypes, delayChannel, snapShotChannel, haltChannel, continueChannel)
-	keyHandler(delayChannel, snapShotChannel, haltChannel, continueChannel)
+	go codeWalk(files, fileTypes)
 }
 
 func sendCodeWalkFileInfo(fileName string){
 	authors, _ := getGitAuthors(fileName)
-	go sendTo(
+	codeWalkFileInfoChannel <-
 		CodeWalkFileInfo{
 			FileName:fileName,
 			Authors: authors,
-		},
-	)
+		}
 }
 
 func codePrinter(tactChannel chan bool, snapShotChannel chan bool, contentMap map[string][]string) {
@@ -79,16 +76,12 @@ func codePrinter(tactChannel chan bool, snapShotChannel chan bool, contentMap ma
 }
 
 func codeWalk(files []string,
-	fileTypes []string,
-	delayTimeInMsChannel chan time.Duration,
-	snapShotChannel chan bool,
-	haltChannel chan bool,
-	continueChannel chan bool) {
+	fileTypes []string) {
 
 	tactChannel := make(chan bool)
 
 	var halt = false
-	var currentDelay = 100 * time.Millisecond
+	var currentDelay = 50 * time.Millisecond
 	fileContentMap := loadFileContentMap(files, fileTypes)
 	color.Set(color.FgHiGreen)
 	rand.Seed(time.Now().Unix())
@@ -109,7 +102,7 @@ func codeWalk(files []string,
 			if colorSwitch {
 				color.Set(colors[randomColorIndex])
 			}
-		case delayTimeInMs := <-delayTimeInMsChannel:
+		case delayTimeInMs := <-delayChannel:
 			currentDelay = delayTimeInMs
 		case <-haltChannel:
 			halt = true

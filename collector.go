@@ -10,9 +10,6 @@ func getGitAuthors(path string) ([]string, error) {
 	fileName, dir := cutFileNameFromPath(path)
 
 	cmdString := "cd " + dir + "&& git blame " + fileName + " --show-stats -p | grep '^author ' | uniq"
-
-	Trace.Println(cmdString)
-
 	cmd := exec.Command("/bin/bash", "-c", cmdString)
 	output, err := cmd.Output()
 
