@@ -56,34 +56,35 @@ func setupUI() (tui.UI, *labelWriter, *labelWriter, *labelWriter) {
 
 	header := tui.NewHBox()
 	header.SetBorder(true)
-	header.SetSizePolicy(tui.Expanding, tui.Maximum)
+	header.SetSizePolicy(tui.Maximum, tui.Maximum)
 
 	header.Append(tui.NewHBox(
 		tui.NewLabel("CODE WALK"),
 		))
 
 	codeBox := tui.NewVBox()
-	codeBox.SetSizePolicy(tui.Expanding, tui.Expanding)
+	//codeBox.SetSizePolicy(tui.Maximum, tui.Maximum)
 
 	codeBoxScroll := tui.NewScrollArea(codeBox)
 	codeBoxScroll.SetAutoscrollToBottom(true)
+	//codeBoxScroll.SetSizePolicy(tui.Maximum, tui.Maximum)
 
-	box := tui.NewVBox(codeBoxScroll)
+	box := tui.NewHBox(codeBoxScroll)
 	box.SetBorder(true)
-	box.SetSizePolicy(tui.Expanding, tui.Maximum)
+	//box.SetSizePolicy(tui.Maximum, tui.Maximum)
 
 	authorsBox := tui.NewVBox()
 	authorsBox.SetBorder(true)
-	authorsBox.SetSizePolicy(tui.Expanding, tui.Maximum)
+	//authorsBox.SetSizePolicy(tui.Maximum, tui.Maximum)
 
 	fileInfoBox := tui.NewVBox()
 	fileInfoBox.SetBorder(true)
-	fileInfoBox.SetSizePolicy(tui.Expanding, tui.Maximum)
+	fileInfoBox.SetSizePolicy(tui.Maximum, tui.Maximum)
 
 	fileInfoAuthorsContainer := tui.NewVBox(fileInfoBox, authorsBox)
 
 	container := tui.NewHBox(box, fileInfoAuthorsContainer)
-	container.SetSizePolicy(tui.Expanding, tui.Maximum)
+	//container.SetSizePolicy(tui.Maximum, tui.Maximum)
 
 	root := tui.NewVBox(header, container)
 	ui, err := tui.New(root)
