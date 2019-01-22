@@ -54,13 +54,7 @@ var delayStep time.Duration = DELAY_STEP
 
 func setupUI() (tui.UI, *labelWriter, *labelWriter, *labelWriter) {
 
-	header := tui.NewHBox()
-	header.SetBorder(true)
-	header.SetSizePolicy(tui.Maximum, tui.Maximum)
 
-	header.Append(tui.NewHBox(
-		tui.NewLabel("CODE WALK"),
-		))
 
 	codeBox := tui.NewVBox()
 	//codeBox.SetSizePolicy(tui.Maximum, tui.Maximum)
@@ -70,23 +64,23 @@ func setupUI() (tui.UI, *labelWriter, *labelWriter, *labelWriter) {
 	//codeBoxScroll.SetSizePolicy(tui.Maximum, tui.Maximum)
 
 	box := tui.NewHBox(codeBoxScroll)
-	box.SetBorder(true)
+	box.SetBorder(false)
 	//box.SetSizePolicy(tui.Maximum, tui.Maximum)
 
 	authorsBox := tui.NewVBox()
-	authorsBox.SetBorder(true)
+	authorsBox.SetBorder(false)
 	//authorsBox.SetSizePolicy(tui.Maximum, tui.Maximum)
 
 	fileInfoBox := tui.NewVBox()
-	fileInfoBox.SetBorder(true)
+	fileInfoBox.SetBorder(false)
 	fileInfoBox.SetSizePolicy(tui.Maximum, tui.Maximum)
 
-	fileInfoAuthorsContainer := tui.NewVBox(fileInfoBox, authorsBox)
+	fileInfoAuthorsContainer := tui.NewVBox(authorsBox)
 
 	container := tui.NewHBox(box, fileInfoAuthorsContainer)
 	//container.SetSizePolicy(tui.Maximum, tui.Maximum)
 
-	root := tui.NewVBox(header, container)
+	root := tui.NewVBox(fileInfoBox, container)
 	ui, err := tui.New(root)
 	if err != nil {
 		Error.Println(err)
