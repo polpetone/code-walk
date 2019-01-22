@@ -46,9 +46,10 @@ func engine(files []string, fileTypes []string) {
 
 func sendCodeWalkFileInfo(fileName string){
 	authors, _ := getGitAuthors(fileName)
+	fileNameWithoutWalkDir := removeWordFromString(fileName, directoryToWalk)
 	codeWalkFileInfoChannel <-
 		CodeWalkFileInfo{
-			FileName:fileName,
+			FileName:fileNameWithoutWalkDir,
 			Authors: authors,
 		}
 }
