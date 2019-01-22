@@ -24,6 +24,7 @@ func ui() {
 				fmt.Fprintln(authorsBoxWriter, a)
 			}
 		default:
+			time.Sleep(5 * time.Millisecond)
 		}
 	}
 }
