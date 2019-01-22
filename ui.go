@@ -50,26 +50,19 @@ func (w *labelWriter) Write(p []byte) (n int, err error) {
 }
 
 var delay time.Duration = 200
-var delayStep time.Duration = DELAY_STEP
+var delayStep = DELAY_STEP
 
 func setupUI() (tui.UI, *labelWriter, *labelWriter, *labelWriter) {
-
-
-
 	codeBox := tui.NewVBox()
-	//codeBox.SetSizePolicy(tui.Maximum, tui.Maximum)
 
 	codeBoxScroll := tui.NewScrollArea(codeBox)
 	codeBoxScroll.SetAutoscrollToBottom(true)
-	//codeBoxScroll.SetSizePolicy(tui.Maximum, tui.Maximum)
 
 	box := tui.NewHBox(codeBoxScroll)
 	box.SetBorder(false)
-	//box.SetSizePolicy(tui.Maximum, tui.Maximum)
 
 	authorsBox := tui.NewVBox()
 	authorsBox.SetBorder(false)
-	//authorsBox.SetSizePolicy(tui.Maximum, tui.Maximum)
 
 	fileInfoBox := tui.NewVBox()
 	fileInfoBox.SetBorder(false)
@@ -78,7 +71,6 @@ func setupUI() (tui.UI, *labelWriter, *labelWriter, *labelWriter) {
 	fileInfoAuthorsContainer := tui.NewVBox(authorsBox)
 
 	container := tui.NewHBox(box, fileInfoAuthorsContainer)
-	//container.SetSizePolicy(tui.Maximum, tui.Maximum)
 
 	root := tui.NewVBox(fileInfoBox, container)
 	ui, err := tui.New(root)
