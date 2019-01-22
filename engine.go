@@ -33,12 +33,6 @@ var haltChannel = make(chan bool)
 var continueChannel = make(chan bool)
 var codeWalkFileInfoChannel = make(chan CodeWalkFileInfo)
 
-func (c *Command) Receive(key string, reply *string) error {
-	Info.Println("received key", key)
-	colorChannel <- true
-	return nil
-}
-
 func engine(files []string, fileTypes []string) {
 	Info.Println("Loaded ", len(files), "files")
 	go codeWalk(files, fileTypes)
