@@ -49,27 +49,46 @@ func sendCodeWalkFileInfo(fileName string){
 		}
 }
 
+//TODO: optimize: clear screen when jump to next file. jump immediately,
+//currently it seems to wait until complete line is print
 func codePrinter(tactChannel chan bool, snapShotChannel chan bool, jumpFileChannel chan bool, contentMap map[string][]string) {
-	for fileName, content := range contentMap {
-		go sendCodeWalkFileInfo(fileName)
-		for _, l := range content {
-			for _, x := range l {
-				select {
-				case <-tactChannel:
-					codeChannel <- string(x)
-				case <-jumpFileChannel:
-					Info.Println("Jump File received")
-				case <-snapShotChannel:
-					var snapShotFile = "snapshot-" + time.Now().Format("2006-01-02_15:04:05")
-					Info.Println("SnapShot current file: ", fileName)
-					err := appendLineToFile(codeWalkDir+"/"+snapShotFile, fileName)
-					if err != nil {
-						Error.Println("Failed to write snapshot: ", err)
+	keys := keysFromMap(contentMap)
+	jumpFile := false
+	for iterator := 0; iterator < len(contentMap); iterator++ {
+			fileName := keys[iterator]
+			content := contentMap[fileName]
+			Trace.Println(fileName)
+			if jumpFile {
+				jumpFile = false
+				Trace.Println("jump file")
+				continue
+			}
+			go sendCodeWalkFileInfo(fileName)
+			for _, l := range content {
+
+				if jumpFile {
+					Trace.Println("jump line")
+					break
+				}
+				for _, x := range l {
+					select {
+					case <-tactChannel:
+						codeChannel <- string(x)
+					case <-jumpFileChannel:
+						Trace.Println("Jump File received")
+						jumpFile = true
+						break
+					case <-snapShotChannel:
+						var snapShotFile= "snapshot-" + time.Now().Format("2006-01-02_15:04:05")
+						Info.Println("SnapShot current file: ", fileName)
+						err := appendLineToFile(codeWalkDir+"/"+snapShotFile, fileName)
+						if err != nil {
+							Error.Println("Failed to write snapshot: ", err)
+						}
 					}
 				}
+				codeChannel <- "\n"
 			}
-			codeChannel <- "\n"
-		}
 	}
 }
 
