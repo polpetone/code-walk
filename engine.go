@@ -30,6 +30,7 @@ type CodeWalkFileInfo struct {
 var delayChannel = make(chan time.Duration, 10)
 var snapShotChannel = make(chan bool, 10)
 var haltChannel = make(chan bool)
+var jumpFileChannel = make(chan bool)
 var continueChannel = make(chan bool)
 var codeWalkFileInfoChannel = make(chan CodeWalkFileInfo)
 
@@ -48,7 +49,7 @@ func sendCodeWalkFileInfo(fileName string){
 		}
 }
 
-func codePrinter(tactChannel chan bool, snapShotChannel chan bool, contentMap map[string][]string) {
+func codePrinter(tactChannel chan bool, snapShotChannel chan bool, jumpFileChannel chan bool, contentMap map[string][]string) {
 	for fileName, content := range contentMap {
 		go sendCodeWalkFileInfo(fileName)
 		for _, l := range content {
@@ -56,6 +57,8 @@ func codePrinter(tactChannel chan bool, snapShotChannel chan bool, contentMap ma
 				select {
 				case <-tactChannel:
 					codeChannel <- string(x)
+				case <-jumpFileChannel:
+					Info.Println("Jump File received")
 				case <-snapShotChannel:
 					var snapShotFile = "snapshot-" + time.Now().Format("2006-01-02_15:04:05")
 					Info.Println("SnapShot current file: ", fileName)
@@ -82,7 +85,7 @@ func codeWalk(files []string,
 	rand.Seed(time.Now().Unix())
 	defer color.Unset()
 
-	go codePrinter(tactChannel, snapShotChannel, fileContentMap)
+	go codePrinter(tactChannel, snapShotChannel, jumpFileChannel, fileContentMap)
 
 	for {
 		time.Sleep(currentDelay)

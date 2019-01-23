@@ -99,6 +99,11 @@ func setupUI() (tui.UI, *labelWriter, *labelWriter, *labelWriter) {
 		Trace.Println("UI Keybinding Pressed h")
 	})
 
+	ui.SetKeybinding("j", func() {
+		jumpFileChannel <-true
+		Trace.Println("UI Keybinding Pressed j")
+	})
+
 	ui.SetKeybinding("g", func() {
 		continueChannel <-true
 		Trace.Println("UI Keybinding Pressed g")
