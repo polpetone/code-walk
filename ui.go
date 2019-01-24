@@ -8,19 +8,23 @@ import (
 )
 
 func ui() {
-	ui, codeBoxWriter, authorsBoxWriter, fileInfoBoxWriter := setupUI()
+	ui, codeBoxWriter, authorsBoxWriter, fileInfoBoxWriter, commitDateBoxWriter := setupUI()
 	go runUI(ui)
 	for {
 		select {
 		case code := <-codeChannel:
 			fmt.Fprint(codeBoxWriter, code)
-		case text := <-codeWalkFileInfoChannel:
+		case fileInfo := <-codeWalkFileInfoChannel:
 			authorsBoxWriter.buf.Reset()
 			authorsBoxWriter.Label.SetText("")
 			fileInfoBoxWriter.buf.Reset()
 			fileInfoBoxWriter.Label.SetText("")
-			fmt.Fprintln(fileInfoBoxWriter, text.FileName)
-			for _, a := range text.Authors {
+			fmt.Fprintln(fileInfoBoxWriter, fileInfo.FileName)
+			commitDateBoxWriter.buf.Reset()
+			commitDateBoxWriter.Label.SetText("")
+			fmt.Fprintln(commitDateBoxWriter, fileInfo.FirstCommitDate)
+			fmt.Fprintln(commitDateBoxWriter, fileInfo.LastCommitDate)
+			for _, a := range fileInfo.Authors {
 				fmt.Fprintln(authorsBoxWriter, a)
 			}
 		default:
@@ -52,7 +56,7 @@ func (w *labelWriter) Write(p []byte) (n int, err error) {
 var delay time.Duration = 200
 var delayStep = DELAY_STEP
 
-func setupUI() (tui.UI, *labelWriter, *labelWriter, *labelWriter) {
+func setupUI() (tui.UI, *labelWriter, *labelWriter, *labelWriter, *labelWriter) {
 	codeBox := tui.NewVBox()
 
 	codeBoxScroll := tui.NewScrollArea(codeBox)
@@ -64,13 +68,16 @@ func setupUI() (tui.UI, *labelWriter, *labelWriter, *labelWriter) {
 	authorsBox := tui.NewVBox()
 	authorsBox.SetBorder(false)
 
+	commitDateBox := tui.NewVBox()
+	commitDateBox.SetBorder(false)
+
 	fileInfoBox := tui.NewVBox()
 	fileInfoBox.SetBorder(false)
 	fileInfoBox.SetSizePolicy(tui.Maximum, tui.Maximum)
 
-	fileInfoAuthorsContainer := tui.NewVBox(authorsBox)
+	authorsAndCommitDateBox := tui.NewVBox(authorsBox, commitDateBox)
 
-	container := tui.NewHBox(box, fileInfoAuthorsContainer)
+	container := tui.NewHBox(box, authorsAndCommitDateBox)
 
 	root := tui.NewVBox(fileInfoBox, container)
 	ui, err := tui.New(root)
@@ -112,10 +119,12 @@ func setupUI() (tui.UI, *labelWriter, *labelWriter, *labelWriter) {
 	codeBoxWriter := &labelWriter{ui : ui}
 	fileInfoBoxWriter := &labelWriter{ui : ui}
 	authorsBoxWriter := &labelWriter{ui : ui}
+	commitDateBoxWriter := &labelWriter{ui : ui}
 	codeBox.Append(codeBoxWriter)
 	authorsBox.Append(authorsBoxWriter)
 	fileInfoBox.Append(fileInfoBoxWriter)
-	return ui, codeBoxWriter, authorsBoxWriter, fileInfoBoxWriter
+	commitDateBox.Append(commitDateBoxWriter)
+	return ui, codeBoxWriter, authorsBoxWriter, fileInfoBoxWriter, commitDateBoxWriter
 }
 
 func runUI(ui tui.UI){

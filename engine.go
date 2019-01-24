@@ -25,6 +25,8 @@ type Command int
 type CodeWalkFileInfo struct {
 	Authors []string
 	FileName string
+	FirstCommitDate string
+	LastCommitDate string
 }
 
 var delayChannel = make(chan time.Duration, 10)
@@ -40,12 +42,15 @@ func engine(files []string, fileTypes []string) {
 }
 
 func sendCodeWalkFileInfo(fileName string){
+	firstCommitDate, lastCommitDate , _ := getGitLogs(fileName)
 	authors, _ := getGitAuthors(fileName)
 	fileNameWithoutWalkDir := removeWordFromString(fileName, directoryToWalk)
 	codeWalkFileInfoChannel <-
 		CodeWalkFileInfo{
 			FileName:fileNameWithoutWalkDir,
 			Authors: authors,
+			FirstCommitDate: firstCommitDate,
+			LastCommitDate: lastCommitDate,
 		}
 }
 
