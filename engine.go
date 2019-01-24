@@ -42,7 +42,7 @@ func engine(files []string, fileTypes []string) {
 }
 
 func sendCodeWalkFileInfo(fileName string){
-	firstCommitDate, lastCommitDate , _ := getGitLogs(fileName)
+	firstCommitDate, lastCommitDate , _ := getCommitDates(fileName)
 	authors, _ := getGitAuthors(fileName)
 	fileNameWithoutWalkDir := removeWordFromString(fileName, directoryToWalk)
 	codeWalkFileInfoChannel <-

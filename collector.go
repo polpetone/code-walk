@@ -20,16 +20,20 @@ func getGitAuthors(path string) ([]string, error) {
 	return uniqueNonEmptyElementsOf(authors), err
 }
 
-func getGitLogs(path string) (string, string ,error) {
+func getCommitDates(path string) (string, string ,error) {
 	fileName, dir := cutFileNameFromPath(path)
 	cmdString := "cd " + dir + "&& git log " + fileName + " | grep Date"
 	cmd := exec.Command("/bin/bash", "-c", cmdString)
 	output, err := cmd.Output()
 	datesRaw := string(output)
 	dates := strings.Split(datesRaw, "\n")
-	lastCommitDate := dates[0]
-	firstCommitDate := dates[len(dates)-2]
-	firstCommitDate = removeWordFromString(firstCommitDate, "Date:")
-	lastCommitDate = removeWordFromString(lastCommitDate, "Date:")
+	firstCommitDate := "unknown"
+	lastCommitDate := "unknown"
+	if len(dates) > 1 {
+		lastCommitDate = dates[0]
+		firstCommitDate = dates[len(dates)-2]
+		firstCommitDate = removeWordFromString(firstCommitDate, "Date:")
+		lastCommitDate = removeWordFromString(lastCommitDate, "Date:")
+	}
 	return firstCommitDate, lastCommitDate, err
 }
