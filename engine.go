@@ -23,6 +23,7 @@ var colors = []color.Attribute{
 type Command int
 
 type CodeWalkFileInfo struct {
+	ProjectName string
 	Authors []string
 	FileName string
 	FirstCommitDate time.Time
@@ -48,8 +49,10 @@ func sendCodeWalkFileInfo(fileName string){
 	}
 	authors, _ := getGitAuthors(fileName)
 	fileNameWithoutWalkDir := removeWordFromString(fileName, directoryToWalk)
+	projectName, _ := gitProjectNameAndAbsolutePathFromFilePath(fileName)
 	codeWalkFileInfoChannel <-
 		CodeWalkFileInfo{
+			ProjectName : projectName,
 			FileName:fileNameWithoutWalkDir,
 			Authors: authors,
 			FirstCommitDate: firstCommitDate,

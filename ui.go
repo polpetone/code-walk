@@ -20,6 +20,7 @@ func ui() {
 			fileInfoBoxWriter.buf.Reset()
 			fileInfoBoxWriter.Label.SetText("")
 			fmt.Fprintln(fileInfoBoxWriter, fileInfo.FileName)
+			fmt.Fprintln(fileInfoBoxWriter, fileInfo.ProjectName)
 			commitDateBoxWriter.buf.Reset()
 			commitDateBoxWriter.Label.SetText("")
 			fmt.Fprintln(commitDateBoxWriter, fileInfo.FirstCommitDate)

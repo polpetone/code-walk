@@ -15,14 +15,14 @@ func getGitAuthors(path string) ([]string, error) {
 	authorsRaw := string(output)
 	authorsRaw2 := strings.Split(authorsRaw, "\n")
 	var authors []string
-	for _,a := range authorsRaw2 {
+	for _, a := range authorsRaw2 {
 		b := removeWordFromString(a, "author")
 		authors = append(authors, b)
 	}
 	return uniqueNonEmptyElementsOf(authors), err
 }
 
-func getCommitDates(path string) (time.Time, time.Time , error) {
+func getCommitDates(path string) (time.Time, time.Time, error) {
 	fileName, dir := cutFileNameFromPath(path)
 	cmdString := "cd " + dir + "&& git log  --date=iso " + fileName + " | grep Date"
 	cmd := exec.Command("/bin/bash", "-c", cmdString)
@@ -43,6 +43,17 @@ func getCommitDates(path string) (time.Time, time.Time , error) {
 		lastTime, err = parseTime(lastCommitDate)
 	}
 	return firstTime, lastTime, err
+}
+
+func gitProjectNameAndAbsolutePathFromFilePath(path string) (string, string) {
+	_, dir := cutFileNameFromPath(path)
+	cmdString := "cd " + dir + " && git rev-parse --show-toplevel "
+	cmd := exec.Command("/bin/bash", "-c", cmdString)
+	output, _ := cmd.Output()
+	absolutePath := string(output)
+	ficktDichGo := strings.Split(absolutePath, "/")
+	projectName := ficktDichGo[len(ficktDichGo)-1]
+	return  strings.TrimSpace(projectName), strings.TrimSpace(absolutePath)
 }
 
 //FIXME still a bug in some constellations

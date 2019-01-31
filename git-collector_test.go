@@ -30,3 +30,11 @@ func TestGetCommitDates(t *testing.T) {
 	fmt.Println("distance1 ", distance1)
 }
 
+func TestGitProjectStats(t *testing.T) {
+	fmt.Println("Test Git Project Stats")
+	path, projectName := gitProjectNameAndAbsolutePathFromFilePath("/home/icke/workspace/playground/go/src/crypto/rand/rand.go")
+	fmt.Println(path)
+	fmt.Println(projectName)
+	fmt.Println("END Test Git Project Stats")
+}
+
