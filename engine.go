@@ -69,6 +69,7 @@ func codePrinter(tactChannel chan bool, snapShotChannel chan bool, jumpFileChann
 			fileName := keys[iterator]
 			content := contentMap[fileName]
 			Trace.Println(fileName)
+			Trace.Println("Show File Number",iterator+1, "from total loaded files", len(contentMap))
 			if jumpFile {
 				jumpFile = false
 				Trace.Println("jump file")
@@ -99,6 +100,10 @@ func codePrinter(tactChannel chan bool, snapShotChannel chan bool, jumpFileChann
 					}
 				}
 				codeChannel <- "\n"
+			}
+			if iterator == len(contentMap) - 1{
+				Trace.Println("Reached End of loaded Files. Start from beginning again.")
+				iterator = -1
 			}
 	}
 }
